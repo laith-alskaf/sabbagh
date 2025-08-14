@@ -1,0 +1,49 @@
+{
+  "general": {
+    "unexpected": "حدث خطأ غير متوقع",
+    "tryAgain": "يرجى المحاولة مرة أخرى لاحقًا",
+    "contact": "إذا استمرت المشكلة، يرجى الاتصال بالدعم"
+  },
+  "api": {
+    "notFound": "نقطة النهاية المطلوبة لواجهة برمجة التطبيقات غير موجودة",
+    "methodNotAllowed": "الطريقة غير مسموح بها لنقطة النهاية هذه",
+    "rateLimited": "طلبات كثيرة جدًا، يرجى المحاولة مرة أخرى لاحقًا"
+  },
+  "database": {
+    "connectionFailed": "فشل الاتصال بقاعدة البيانات",
+    "queryFailed": "فشل استعلام قاعدة البيانات",
+    "recordNotFound": "السجل غير موجود",
+    "duplicateEntry": "يوجد بالفعل سجل بهذه المعلومات"
+  },
+  "validation": {
+    "failed": "فشل التحقق من الصحة",
+    "invalidData": "تم تقديم بيانات غير صالحة"
+  },
+  "file": {
+    "uploadFailed": "فشل تحميل الملف",
+    "invalidType": "نوع ملف غير صالح",
+    "tooLarge": "الملف كبير جدًا",
+    "downloadFailed": "فشل تنزيل الملف"
+  },
+  "vendor": {
+    "notFound": "المورد غير موجود",
+    "createFailed": "فشل إنشاء المورد",
+    "updateFailed": "فشل تحديث المورد",
+    "deleteFailed": "فشل حذف المورد",
+    "alreadyExists": "يوجد بالفعل مورد بهذه المعلومات"
+  },
+  "item": {
+    "notFound": "العنصر غير موجود",
+    "createFailed": "فشل إنشاء العنصر",
+    "updateFailed": "فشل تحديث العنصر",
+    "deleteFailed": "فشل حذف العنصر",
+    "codeExists": "يوجد بالفعل عنصر بهذا الرمز"
+  },
+  "changeRequest": {
+    "notFound": "طلب التغيير غير موجود",
+    "alreadyProcessed": "تمت معالجة طلب التغيير بالفعل",
+    "approveFailed": "فشل الموافقة على طلب التغيير",
+    "rejectFailed": "فشل رفض طلب التغيير",
+    "invalidOperation": "عملية غير صالحة لطلب التغيير هذا"
+  }
+}

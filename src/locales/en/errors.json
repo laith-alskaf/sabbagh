@@ -1,0 +1,49 @@
+{
+  "general": {
+    "unexpected": "An unexpected error occurred",
+    "tryAgain": "Please try again later",
+    "contact": "If the problem persists, please contact support"
+  },
+  "api": {
+    "notFound": "The requested API endpoint does not exist",
+    "methodNotAllowed": "Method not allowed for this endpoint",
+    "rateLimited": "Too many requests, please try again later"
+  },
+  "database": {
+    "connectionFailed": "Database connection failed",
+    "queryFailed": "Database query failed",
+    "recordNotFound": "Record not found",
+    "duplicateEntry": "A record with this information already exists"
+  },
+  "validation": {
+    "failed": "Validation failed",
+    "invalidData": "Invalid data provided"
+  },
+  "file": {
+    "uploadFailed": "File upload failed",
+    "invalidType": "Invalid file type",
+    "tooLarge": "File is too large",
+    "downloadFailed": "File download failed"
+  },
+  "vendor": {
+    "notFound": "Vendor not found",
+    "createFailed": "Failed to create vendor",
+    "updateFailed": "Failed to update vendor",
+    "deleteFailed": "Failed to delete vendor",
+    "alreadyExists": "A vendor with this information already exists"
+  },
+  "item": {
+    "notFound": "Item not found",
+    "createFailed": "Failed to create item",
+    "updateFailed": "Failed to update item",
+    "deleteFailed": "Failed to delete item",
+    "codeExists": "An item with this code already exists"
+  },
+  "changeRequest": {
+    "notFound": "Change request not found",
+    "alreadyProcessed": "Change request has already been processed",
+    "approveFailed": "Failed to approve change request",
+    "rejectFailed": "Failed to reject change request",
+    "invalidOperation": "Invalid operation for this change request"
+  }
+}

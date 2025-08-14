@@ -1,0 +1,11 @@
+.env
+.eslintrc
+node_modules/
+dist/
+build/
+public/
+.prettierrc
+docs/
+scripts/
+prisma/
+.zencoder
