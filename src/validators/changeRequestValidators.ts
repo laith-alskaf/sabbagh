@@ -22,7 +22,27 @@ export const createChangeRequestSchema = z.object({
   path: ['entity_id'],
 });
 
-// Change request approval/rejection schema
+// Change request approval schema
+export const approveChangeRequestSchema = z.object({
+  notes: z.string()
+    .max(1000, 'Notes must not exceed 1000 characters')
+    .trim()
+    .optional(),
+});
+
+// Change request rejection schema
+export const rejectChangeRequestSchema = z.object({
+  reason: z.string()
+    .min(5, 'Reason must be at least 5 characters')
+    .max(1000, 'Reason must not exceed 1000 characters')
+    .trim(),
+  notes: z.string()
+    .max(1000, 'Notes must not exceed 1000 characters')
+    .trim()
+    .optional(),
+});
+
+// Change request approval/rejection schema (legacy)
 export const processChangeRequestSchema = z.object({
   action: z.enum(['approve', 'reject']),
   reason: z.string()

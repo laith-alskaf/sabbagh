@@ -958,6 +958,116 @@ All endpoints return consistent error responses with appropriate HTTP status cod
             },
           },
         },
+        AuditLog: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Audit log unique identifier',
+              example: 'log12345-e89b-12d3-a456-426614174005',
+            },
+            actor_id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'ID of the user who performed the action',
+              example: '123e4567-e89b-12d3-a456-426614174000',
+            },
+            actor_name: {
+              type: 'string',
+              description: 'Name of the user who performed the action',
+              example: 'Ahmad Al-Sabbagh',
+            },
+            actor_email: {
+              type: 'string',
+              format: 'email',
+              description: 'Email of the user who performed the action',
+              example: 'ahmad@sabbagh.com',
+            },
+            action: {
+              type: 'string',
+              enum: ['create', 'update', 'delete', 'login', 'logout', 'approve', 'reject', 'submit'],
+              description: 'Action performed',
+              example: 'create',
+            },
+            entity_type: {
+              type: 'string',
+              enum: ['user', 'vendor', 'item', 'purchase_order', 'change_request'],
+              description: 'Type of entity affected',
+              example: 'vendor',
+            },
+            entity_id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'ID of the affected entity',
+              example: '456e7890-e89b-12d3-a456-426614174001',
+            },
+            details: {
+              type: 'object',
+              description: 'Additional details about the action',
+              additionalProperties: true,
+              example: {
+                before: { name: 'Old Name' },
+                after: { name: 'New Name' }
+              },
+            },
+            ip_address: {
+              type: 'string',
+              description: 'IP address of the user',
+              example: '192.168.1.100',
+            },
+            user_agent: {
+              type: 'string',
+              description: 'User agent string',
+              example: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Audit log creation timestamp',
+              example: '2024-01-15T10:30:00Z',
+            },
+          },
+        },
+        Pagination: {
+          type: 'object',
+          properties: {
+            page: {
+              type: 'integer',
+              description: 'Current page number',
+              example: 1,
+              minimum: 1,
+            },
+            limit: {
+              type: 'integer',
+              description: 'Number of items per page',
+              example: 10,
+              minimum: 1,
+            },
+            total: {
+              type: 'integer',
+              description: 'Total number of items',
+              example: 150,
+              minimum: 0,
+            },
+            totalPages: {
+              type: 'integer',
+              description: 'Total number of pages',
+              example: 15,
+              minimum: 0,
+            },
+            hasNext: {
+              type: 'boolean',
+              description: 'Whether there is a next page',
+              example: true,
+            },
+            hasPrev: {
+              type: 'boolean',
+              description: 'Whether there is a previous page',
+              example: false,
+            },
+          },
+        },
       },
       responses: {
         UnauthorizedError: {

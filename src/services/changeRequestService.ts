@@ -7,6 +7,49 @@ import { AppError } from '../middlewares/errorMiddleware';
 import * as crRepo from '../repositories/changeRequestRepository';
 
 /**
+ * Create a new change request
+ */
+export const createChangeRequest = async (data: {
+  entity_type: EntityType;
+  operation: string;
+  target_id?: string;
+  payload: any;
+  reason?: string;
+  requested_by: string;
+}): Promise<ChangeRequestResponse> => {
+  // Mock implementation - replace with actual database operations
+  const changeRequest: ChangeRequestResponse = {
+    id: `cr-${Date.now()}`,
+    operation: data.operation as any,
+    entity_type: data.entity_type,
+    target_id: data.target_id || null,
+    payload: data.payload,
+    status: ChangeRequestStatus.PENDING,
+    requested_by: data.requested_by,
+    reviewed_by: null,
+    reviewed_at: null,
+    reason: data.reason || null,
+    created_at: new Date(),
+    updated_at: new Date(),
+  };
+
+  // Create audit log
+  await createAuditLog(
+    data.requested_by,
+    'create',
+    'change_request',
+    changeRequest.id,
+    {
+      operation_type: data.operation,
+      target_entity_type: data.entity_type,
+      target_entity_id: data.target_id,
+    }
+  );
+
+  return changeRequest;
+};
+
+/**
  * Get all change requests with optional filters
  */
 export const getChangeRequests = async (

@@ -2,7 +2,6 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env';
 import routes from './routes';
@@ -46,14 +45,18 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Swagger documentation
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, 'config', 'swagger-ui.html'));
-});
-app.get('/api-docs/swagger.json', (req: Request, res: Response) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(specs);
-});
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  // explorer: true,
+  // customCss: '.swagger-ui .topbar { display: none }',
+  // customSiteTitle: 'Sabbagh API Documentation',
+  // swaggerOptions: {
+  //   persistAuthorization: true,
+  //   displayRequestDuration: true,
+  //   filter: true,
+  //   showExtensions: true,
+  //   showCommonExtensions: true,
+  // }
+}));
 
 // API routes
 app.use('/api', routes);

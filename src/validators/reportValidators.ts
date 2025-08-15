@@ -51,7 +51,26 @@ export const purchaseOrderListQuerySchema = baseReportQuerySchema.extend({
   status: z.string().optional(),
 });
 
+// General report query schema (for all report types)
+export const reportQuerySchema = baseReportQuerySchema.extend({
+  format: z.enum(['json', 'csv', 'excel']).optional().default('json'),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  status: z.string().optional(),
+  entity_type: z.string().optional(),
+  department: z.string().optional(),
+  supplier_id: z.string().uuid().optional(),
+  item_id: z.string().uuid().optional(),
+  currency: z.enum(['SYP', 'USD', 'all']).optional().default('all'),
+  group_by: z.enum(['month', 'department', 'supplier', 'category', 'item']).optional(),
+  include_performance: z.string().optional().transform(val => val === 'true'),
+  include_usage: z.string().optional().transform(val => val === 'true'),
+  sort: z.string().optional(),
+  order: z.enum(['asc', 'desc']).optional().default('desc'),
+});
+
 // Types derived from schemas
 export type ExpenseReportQueryParams = z.infer<typeof expenseReportQuerySchema>;
 export type QuantityReportQueryParams = z.infer<typeof quantityReportQuerySchema>;
 export type PurchaseOrderListQueryParams = z.infer<typeof purchaseOrderListQuerySchema>;
+export type ReportQueryParams = z.infer<typeof reportQuerySchema>;

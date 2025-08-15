@@ -6,6 +6,43 @@ import { AppError, asyncHandler } from '../middlewares/errorMiddleware';
 import { t } from '../utils/i18n';
 
 /**
+ * Create a new change request
+ * POST /change-requests
+ */
+export const createChangeRequest = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  }
+  
+  const { entity_type, operation, target_id, payload, reason } = req.body;
+  
+  try {
+    const changeRequest = await changeRequestService.createChangeRequest({
+      entity_type,
+      operation,
+      target_id,
+      payload,
+      reason,
+      requested_by: req.user.userId,
+    });
+    
+    res.status(201).json({
+      success: true,
+      message: t(req, 'changeRequest.created', { ns: 'common' }),
+      data: changeRequest,
+    });
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    throw new AppError(
+      `${t(req, 'changeRequest.createFailed', { ns: 'errors' })}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      500
+    );
+  }
+});
+
+/**
  * Get all change requests
  * GET /change-requests
  */

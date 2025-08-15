@@ -135,4 +135,8 @@ export const logBusinessEvent = (event: string, data: any = {}) => {
   });
 };
 
+export const logInfo = (message: string, context: any = {}) => {
+  logger.info(message, context);
+};
+
 export default logger;

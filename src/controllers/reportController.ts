@@ -225,3 +225,115 @@ export const exportPurchaseOrderList = asyncHandler(async (req: Request, res: Re
   await workbook.xlsx.write(res);
   res.end();
 });
+
+/**
+ * Get vendor report data
+ * GET /reports/vendors
+ */
+export const getVendorReport = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  }
+
+  // Only managers and assistant managers can access reports
+  if (req.user.role !== UserRole.MANAGER && req.user.role !== UserRole.ASSISTANT_MANAGER) {
+    throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  }
+
+  // Parse filters from query parameters
+  const filters = {
+    status: req.query.status as string,
+    include_performance: req.query.include_performance === 'true',
+  };
+
+  // Parse pagination parameters
+  const page = req.query.page ? parseInt(req.query.page as string) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+
+  // Mock vendor report data
+  const mockVendorData = [
+    {
+      id: '456e7890-e89b-12d3-a456-426614174001',
+      name: 'ABC Trading Company',
+      contact_person: 'Ahmad Al-Sabbagh',
+      phone: '+963-11-1234567',
+      email: 'contact@abctrading.com',
+      status: 'active',
+      total_orders: 25,
+      total_value_syp: 10000000,
+      total_value_usd: 30000,
+      average_order_value: 1200,
+      rating: 4.5,
+      created_at: new Date().toISOString(),
+    },
+  ];
+
+  res.status(200).json({
+    success: true,
+    data: mockVendorData,
+    pagination: {
+      page,
+      limit,
+      total: mockVendorData.length,
+      totalPages: Math.ceil(mockVendorData.length / limit),
+      hasNext: false,
+      hasPrev: false,
+    },
+  });
+});
+
+/**
+ * Get item report data
+ * GET /reports/items
+ */
+export const getItemReport = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  }
+
+  // Only managers and assistant managers can access reports
+  if (req.user.role !== UserRole.MANAGER && req.user.role !== UserRole.ASSISTANT_MANAGER) {
+    throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  }
+
+  // Parse filters from query parameters
+  const filters = {
+    status: req.query.status as string,
+    include_usage: req.query.include_usage === 'true',
+  };
+
+  // Parse pagination parameters
+  const page = req.query.page ? parseInt(req.query.page as string) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+
+  // Mock item report data
+  const mockItemData = [
+    {
+      id: '789e0123-e89b-12d3-a456-426614174002',
+      name: 'Office Chair Executive',
+      code: 'CHAIR-EXEC-001',
+      description: 'High-quality executive office chair',
+      unit: 'piece',
+      status: 'active',
+      total_ordered: 150,
+      total_value_syp: 5000000,
+      total_value_usd: 15000,
+      order_frequency: 12,
+      average_price: 300.50,
+      created_at: new Date().toISOString(),
+    },
+  ];
+
+  res.status(200).json({
+    success: true,
+    data: mockItemData,
+    pagination: {
+      page,
+      limit,
+      total: mockItemData.length,
+      totalPages: Math.ceil(mockItemData.length / limit),
+      hasNext: false,
+      hasPrev: false,
+    },
+  });
+});
