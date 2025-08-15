@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ChangeRequestStatus, EntityType, UserRole } from '@prisma/client';
+import { ChangeRequestStatus, EntityType, UserRole } from '../types/models';
 import * as changeRequestService from '../services/changeRequestService';
 import { ApproveRejectRequest } from '../types/changeRequest';
 import { AppError, asyncHandler } from '../middlewares/errorMiddleware';
@@ -16,8 +16,8 @@ export const getChangeRequests = asyncHandler(async (req: Request, res: Response
   
   const { status, entity_type, limit, offset } = req.query;
   
-  // Employees can only see their own change requests
-  const requestedBy = req.user.role === UserRole.employee ? req.user.userId : undefined;
+  // Assistant managers can see their own change requests, employees can't see any
+  const requestedBy = req.user.role === UserRole.ASSISTANT_MANAGER ? req.user.userId : undefined;
   
   const changeRequests = await changeRequestService.getChangeRequests(
     status as ChangeRequestStatus,
@@ -51,8 +51,13 @@ export const getChangeRequestById = asyncHandler(async (req: Request, res: Respo
     throw new AppError(t(req, 'changeRequest.notFound', { ns: 'errors' }), 404);
   }
   
-  // Employees can only see their own change requests
-  if (req.user.role === UserRole.employee && changeRequest.requested_by !== req.user.userId) {
+  // Assistant managers can only see their own change requests, employees can't see any
+  if (req.user.role === UserRole.ASSISTANT_MANAGER && changeRequest.requested_by !== req.user.userId) {
+    throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  }
+  
+  // Employees cannot access change requests
+  if (req.user.role === UserRole.EMPLOYEE) {
     throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
   }
   
@@ -72,7 +77,7 @@ export const approveChangeRequest = asyncHandler(async (req: Request, res: Respo
   }
   
   // Only managers can approve change requests
-  if (req.user.role !== UserRole.manager) {
+  if (req.user.role !== UserRole.MANAGER) {
     throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
   }
   
@@ -107,7 +112,7 @@ export const rejectChangeRequest = asyncHandler(async (req: Request, res: Respon
   }
   
   // Only managers can reject change requests
-  if (req.user.role !== UserRole.manager) {
+  if (req.user.role !== UserRole.MANAGER) {
     throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
   }
   

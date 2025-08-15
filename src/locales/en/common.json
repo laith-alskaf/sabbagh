@@ -30,5 +30,30 @@
     "pending": "Pending",
     "approved_status": "Approved",
     "rejected_status": "Rejected"
+  },
+  "purchaseOrder": {
+    "created": "Purchase order created successfully",
+    "updated": "Purchase order updated successfully",
+    "submitted": "Purchase order submitted for review",
+    "assistantApproved": "Purchase order approved by assistant manager and sent for manager review",
+    "assistantRejected": "Purchase order rejected by assistant manager",
+    "managerApproved": "Purchase order approved by manager and marked as in progress",
+    "managerRejected": "Purchase order rejected by manager",
+    "completed": "Purchase order marked as completed",
+    "status": {
+      "draft": "Draft",
+      "under_assistant_review": "Under Assistant Manager Review",
+      "rejected_by_assistant": "Rejected by Assistant Manager",
+      "under_manager_review": "Under Manager Review",
+      "rejected_by_manager": "Rejected by Manager",
+      "in_progress": "In Progress",
+      "completed": "Completed"
+    }
+  },
+  "roles": {
+    "manager": "Purchasing Manager",
+    "assistant_manager": "Assistant Purchasing Manager",
+    "employee": "Purchasing Employee",
+    "guest": "Guest"
   }
 }

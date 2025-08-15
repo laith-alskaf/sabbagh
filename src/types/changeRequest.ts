@@ -1,4 +1,4 @@
-import { ChangeRequestStatus, EntityType, OperationType } from '@prisma/client';
+import { ChangeRequestStatus, EntityType, OperationType } from '../types/models';
 
 export interface ChangeRequestResponse {
   id: string;

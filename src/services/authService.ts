@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { type Secret, type SignOptions } from 'jsonwebtoken';
 import { env } from '../config/env';
-import prisma from '../config/prisma';
+import * as users from '../repositories/userRepository';
 import { AuthTokenPayload, LoginRequest, ChangePasswordRequest } from '../types/auth';
 import { User, UserRole } from '../types/models';
 
@@ -15,9 +15,10 @@ export const generateToken = (user: User): string => {
     role: user.role as UserRole,
   };
 
-  return jwt.sign(payload, env.jwt.secret, {
-    expiresIn: env.jwt.expiresIn,
-  });
+  const secret: Secret = env.jwt.secret;
+  const options: SignOptions = { expiresIn: env.jwt.expiresIn as SignOptions['expiresIn'] };
+
+  return jwt.sign(payload, secret, options);
 };
 
 /**
@@ -50,9 +51,7 @@ export const comparePassword = async (
  */
 export const login = async (loginData: LoginRequest) => {
   // Find user by email
-  const user = await prisma.user.findUnique({
-    where: { email: loginData.email },
-  });
+  const user = await users.findByEmail(loginData.email);
 
   if (!user) {
     throw new Error('Invalid email or password');
@@ -88,9 +87,7 @@ export const login = async (loginData: LoginRequest) => {
  */
 export const changePassword = async (userId: string, data: ChangePasswordRequest) => {
   // Find user
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
+  const user = await users.findById(userId);
 
   if (!user) {
     throw new Error('User not found');
@@ -106,10 +103,7 @@ export const changePassword = async (userId: string, data: ChangePasswordRequest
   const hashedPassword = await hashPassword(data.newPassword);
 
   // Update password
-  await prisma.user.update({
-    where: { id: userId },
-    data: { password_hash: hashedPassword },
-  });
+  await users.updatePassword(userId, hashedPassword);
 
   return { success: true, message: 'Password changed successfully' };
 };
@@ -122,9 +116,7 @@ export const seedDefaultManager = async (): Promise<void> => {
   
   try {
     // Check if default manager already exists
-    const existingManager = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingManager = await users.findByEmail(email);
 
     if (existingManager) {
       console.log('Default manager account already exists');
@@ -135,14 +127,12 @@ export const seedDefaultManager = async (): Promise<void> => {
     const hashedPassword = await hashPassword(password);
 
     // Create the default manager
-    await prisma.user.create({
-      data: {
-        name,
-        email,
-        password_hash: hashedPassword,
-        role: 'manager',
-        active: true,
-      },
+    await users.createManager({
+      name,
+      email,
+      password_hash: hashedPassword,
+      role: 'manager' as any,
+      active: true,
     });
 
     console.log('Default manager account created successfully');

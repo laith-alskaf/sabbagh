@@ -45,5 +45,21 @@
     "approveFailed": "Failed to approve change request",
     "rejectFailed": "Failed to reject change request",
     "invalidOperation": "Invalid operation for this change request"
+  },
+  "purchaseOrder": {
+    "notFound": "Purchase order not found",
+    "createFailed": "Failed to create purchase order",
+    "updateFailed": "Failed to update purchase order",
+    "submitFailed": "Failed to submit purchase order",
+    "approveFailed": "Failed to approve purchase order",
+    "rejectFailed": "Failed to reject purchase order",
+    "completeFailed": "Failed to mark purchase order as completed",
+    "invalidStatus": "Invalid status for this operation",
+    "notDraft": "Only draft purchase orders can be updated",
+    "notUnderAssistantReview": "Only purchase orders under assistant review can be approved or rejected by assistant manager",
+    "notUnderManagerReview": "Only purchase orders under manager review can be approved or rejected by manager",
+    "notInProgress": "Only in-progress purchase orders can be marked as completed",
+    "alreadySubmitted": "This purchase order has already been submitted",
+    "notYourOrder": "You do not have permission to access this purchase order"
   }
 }

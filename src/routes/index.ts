@@ -7,6 +7,9 @@ import vendorRoutes from './vendorRoutes';
 import itemRoutes from './itemRoutes';
 import changeRequestRoutes from './changeRequestRoutes';
 import auditRoutes from './auditRoutes';
+import purchaseOrderRoutes from './purchaseOrderRoutes';
+import dashboardRoutes from './dashboardRoutes';
+import reportRoutes from './reportRoutes';
 
 const router = Router();
 
@@ -18,5 +21,8 @@ router.use('/vendors', vendorRoutes);
 router.use('/items', itemRoutes);
 router.use('/change-requests', changeRequestRoutes);
 router.use('/audit-logs', auditRoutes);
+router.use('/purchase-orders', purchaseOrderRoutes);
+router.use('/dashboard', dashboardRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;

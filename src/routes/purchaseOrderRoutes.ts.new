@@ -1,0 +1,560 @@
+import { Router } from 'express';
+import * as purchaseOrderController from '../controllers/purchaseOrderController';
+import { authenticateJWT } from '../middlewares/authMiddleware';
+
+const router = Router();
+
+/**
+ * @swagger
+ * tags:
+ *   name: Purchase Orders
+ *   description: Purchase order management endpoints
+ */
+
+// Apply authentication middleware to all routes
+router.use(authenticateJWT);
+
+/**
+ * @swagger
+ * /purchase-orders:
+ *   get:
+ *     summary: Get all purchase orders
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [draft, under_assistant_review, rejected_by_assistant, under_manager_review, rejected_by_manager, in_progress, completed]
+ *         description: Filter by status
+ *       - in: query
+ *         name: department
+ *         schema:
+ *           type: string
+ *         description: Filter by department
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter by start date (YYYY-MM-DD)
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter by end date (YYYY-MM-DD)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of items to skip
+ *     responses:
+ *       200:
+ *         description: List of purchase orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 10
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/PurchaseOrder'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/', purchaseOrderController.getPurchaseOrders);
+
+/**
+ * @swagger
+ * /purchase-orders/{id}:
+ *   get:
+ *     summary: Get a purchase order by ID
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Purchase order ID
+ *     responses:
+ *       200:
+ *         description: Purchase order details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/PurchaseOrder'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/:id', purchaseOrderController.getPurchaseOrderById);
+
+/**
+ * @swagger
+ * /purchase-orders:
+ *   post:
+ *     summary: Create a new purchase order
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - department
+ *               - request_date
+ *               - items
+ *             properties:
+ *               department:
+ *                 type: string
+ *                 description: Department name
+ *               request_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Request date
+ *               delivery_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Expected delivery date
+ *               notes:
+ *                 type: string
+ *                 description: Additional notes
+ *               supplier_id:
+ *                 type: string
+ *                 description: Supplier ID
+ *               requester_name:
+ *                 type: string
+ *                 description: Name of the requester (if not a system user)
+ *               currency:
+ *                 type: string
+ *                 description: Currency code
+ *                 default: SYP
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - item_name
+ *                     - quantity
+ *                     - unit
+ *                     - price
+ *                   properties:
+ *                     item_id:
+ *                       type: string
+ *                       description: Item ID
+ *                     item_name:
+ *                       type: string
+ *                       description: Item name
+ *                     quantity:
+ *                       type: number
+ *                       description: Quantity
+ *                     unit:
+ *                       type: string
+ *                       description: Unit of measurement
+ *                     price:
+ *                       type: number
+ *                       description: Unit price
+ *     responses:
+ *       201:
+ *         description: Purchase order created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Purchase order created successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/PurchaseOrder'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/', purchaseOrderController.createPurchaseOrder);
+
+/**
+ * @swagger
+ * /purchase-orders/{id}:
+ *   put:
+ *     summary: Update a purchase order
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Purchase order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               department:
+ *                 type: string
+ *                 description: Department name
+ *               request_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Request date
+ *               delivery_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Expected delivery date
+ *               notes:
+ *                 type: string
+ *                 description: Additional notes
+ *               supplier_id:
+ *                 type: string
+ *                 description: Supplier ID
+ *               requester_name:
+ *                 type: string
+ *                 description: Name of the requester (if not a system user)
+ *               currency:
+ *                 type: string
+ *                 description: Currency code
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - item_name
+ *                     - quantity
+ *                     - unit
+ *                     - price
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: Purchase order item ID (for existing items)
+ *                     item_id:
+ *                       type: string
+ *                       description: Item ID
+ *                     item_name:
+ *                       type: string
+ *                       description: Item name
+ *                     quantity:
+ *                       type: number
+ *                       description: Quantity
+ *                     unit:
+ *                       type: string
+ *                       description: Unit of measurement
+ *                     price:
+ *                       type: number
+ *                       description: Unit price
+ *     responses:
+ *       200:
+ *         description: Purchase order updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Purchase order updated successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/PurchaseOrder'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/:id', purchaseOrderController.updatePurchaseOrder);
+
+/**
+ * @swagger
+ * /purchase-orders/{id}/submit:
+ *   post:
+ *     summary: Submit a purchase order for review
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Purchase order ID
+ *     responses:
+ *       200:
+ *         description: Purchase order submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Purchase order submitted for review
+ *                 data:
+ *                   $ref: '#/components/schemas/PurchaseOrder'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/:id/submit', purchaseOrderController.submitPurchaseOrder);
+
+/**
+ * @swagger
+ * /purchase-orders/{id}/approve:
+ *   post:
+ *     summary: Approve a purchase order
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Purchase order ID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notes:
+ *                 type: string
+ *                 description: Approval notes
+ *     responses:
+ *       200:
+ *         description: Purchase order approved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Purchase order approved
+ *                 data:
+ *                   $ref: '#/components/schemas/PurchaseOrder'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/:id/approve', purchaseOrderController.approvePurchaseOrder);
+
+/**
+ * @swagger
+ * /purchase-orders/{id}/reject:
+ *   post:
+ *     summary: Reject a purchase order
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Purchase order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reason
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 description: Rejection reason
+ *     responses:
+ *       200:
+ *         description: Purchase order rejected successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Purchase order rejected
+ *                 data:
+ *                   $ref: '#/components/schemas/PurchaseOrder'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/:id/reject', purchaseOrderController.rejectPurchaseOrder);
+
+/**
+ * @swagger
+ * /purchase-orders/{id}/complete:
+ *   post:
+ *     summary: Mark a purchase order as completed
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Purchase order ID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notes:
+ *                 type: string
+ *                 description: Completion notes
+ *     responses:
+ *       200:
+ *         description: Purchase order marked as completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Purchase order marked as completed
+ *                 data:
+ *                   $ref: '#/components/schemas/PurchaseOrder'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/:id/complete', purchaseOrderController.completePurchaseOrder);
+
+/**
+ * @swagger
+ * /purchase-orders/{id}:
+ *   delete:
+ *     summary: Delete a purchase order
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Purchase order ID
+ *     responses:
+ *       200:
+ *         description: Purchase order deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Purchase order deleted successfully
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.delete('/:id', purchaseOrderController.deletePurchaseOrder);
+
+export default router;

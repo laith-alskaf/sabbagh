@@ -1,6 +1,7 @@
 // User model types
 export enum UserRole {
   MANAGER = 'manager',
+  ASSISTANT_MANAGER = 'assistant_manager',
   EMPLOYEE = 'employee',
   GUEST = 'guest',
 }
@@ -61,10 +62,12 @@ export enum RequestType {
 
 export enum PurchaseOrderStatus {
   DRAFT = 'draft',
-  UNDER_REVIEW = 'under_review',
+  UNDER_ASSISTANT_REVIEW = 'under_assistant_review',
+  REJECTED_BY_ASSISTANT = 'rejected_by_assistant',
+  UNDER_MANAGER_REVIEW = 'under_manager_review',
+  REJECTED_BY_MANAGER = 'rejected_by_manager',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
-  REJECTED = 'rejected',
 }
 
 export enum Currency {

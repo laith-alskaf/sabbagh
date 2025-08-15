@@ -30,5 +30,30 @@
     "pending": "قيد الانتظار",
     "approved_status": "تمت الموافقة",
     "rejected_status": "مرفوض"
+  },
+  "purchaseOrder": {
+    "created": "تم إنشاء طلب الشراء بنجاح",
+    "updated": "تم تحديث طلب الشراء بنجاح",
+    "submitted": "تم تقديم طلب الشراء للمراجعة",
+    "assistantApproved": "تمت الموافقة على طلب الشراء من قبل مساعد المدير وتم إرساله لمراجعة المدير",
+    "assistantRejected": "تم رفض طلب الشراء من قبل مساعد المدير",
+    "managerApproved": "تمت الموافقة على طلب الشراء من قبل المدير وتم تحديده كقيد التنفيذ",
+    "managerRejected": "تم رفض طلب الشراء من قبل المدير",
+    "completed": "تم تحديد طلب الشراء كمكتمل",
+    "status": {
+      "draft": "مسودة",
+      "under_assistant_review": "قيد مراجعة مساعد المدير",
+      "rejected_by_assistant": "مرفوض من قبل مساعد المدير",
+      "under_manager_review": "قيد مراجعة المدير",
+      "rejected_by_manager": "مرفوض من قبل المدير",
+      "in_progress": "قيد التنفيذ",
+      "completed": "مكتمل"
+    }
+  },
+  "roles": {
+    "manager": "مدير المشتريات",
+    "assistant_manager": "مساعد مدير المشتريات",
+    "employee": "موظف المشتريات",
+    "guest": "ضيف"
   }
 }

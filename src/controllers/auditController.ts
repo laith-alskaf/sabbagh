@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../types/models';
 import * as auditService from '../services/auditService';
 import { AppError, asyncHandler } from '../middlewares/errorMiddleware';
 import { t } from '../utils/i18n';
@@ -14,7 +14,7 @@ export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => 
   }
   
   // Only managers can view audit logs
-  if (req.user.role !== UserRole.manager) {
+  if (req.user.role !== UserRole.MANAGER) {
     throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
   }
   

@@ -1,9 +1,10 @@
-import { PrismaClient, Prisma, EntityType, OperationType, ChangeRequestStatus, UserRole } from '@prisma/client';
+import { EntityType, OperationType, ChangeRequestStatus } from '../types/models';
 import { CreateVendorRequest, UpdateVendorRequest, VendorResponse } from '../types/vendor';
 import { createAuditLog } from './auditService';
 import { AppError } from '../middlewares/errorMiddleware';
-
-const prisma = new PrismaClient();
+import * as vendorRepo from '../repositories/vendorRepository';
+import * as crRepo from '../repositories/changeRequestRepository';
+import { withTx } from '../repositories/tx';
 
 /**
  * Get all vendors with optional filters
@@ -27,15 +28,12 @@ export const getVendors = async (
     where.status = status;
   }
 
-  const vendors = await prisma.vendor.findMany({
-    where,
-    orderBy: {
-      name: 'asc',
-    },
-    take: limit,
-    skip: offset,
+  const vendors = await vendorRepo.findVendors({
+    name,
+    status,
+    limit,
+    offset,
   });
-
   return vendors;
 };
 
@@ -43,10 +41,7 @@ export const getVendors = async (
  * Get a vendor by ID
  */
 export const getVendorById = async (id: string): Promise<VendorResponse | null> => {
-  const vendor = await prisma.vendor.findUnique({
-    where: { id },
-  });
-
+  const vendor = await vendorRepo.findVendorById(id);
   return vendor;
 };
 
@@ -57,8 +52,15 @@ export const createVendor = async (
   data: CreateVendorRequest,
   userId: string
 ): Promise<VendorResponse> => {
-  const vendor = await prisma.vendor.create({
-    data,
+  const vendor = await vendorRepo.createVendor({
+    name: data.name,
+    contact_person: data.contact_person,
+    phone: data.phone,
+    email: data.email ?? null,
+    address: data.address,
+    notes: data.notes ?? null,
+    rating: data.rating ?? null,
+    status: data.status,
   });
 
   // Create audit log
@@ -82,18 +84,13 @@ export const updateVendor = async (
   userId: string
 ): Promise<VendorResponse> => {
   // Get the vendor before update for audit log
-  const vendorBefore = await prisma.vendor.findUnique({
-    where: { id },
-  });
+  const vendorBefore = await vendorRepo.findVendorById(id);
 
   if (!vendorBefore) {
     throw new Error('Vendor not found');
   }
 
-  const vendor = await prisma.vendor.update({
-    where: { id },
-    data,
-  });
+  const vendor = await vendorRepo.updateVendor(id, data as any);
 
   // Create audit log
   await createAuditLog(
@@ -115,17 +112,13 @@ export const deleteVendor = async (
   userId: string
 ): Promise<VendorResponse> => {
   // Get the vendor before delete for audit log
-  const vendorBefore = await prisma.vendor.findUnique({
-    where: { id },
-  });
+  const vendorBefore = await vendorRepo.findVendorById(id);
 
   if (!vendorBefore) {
     throw new Error('Vendor not found');
   }
 
-  const vendor = await prisma.vendor.delete({
-    where: { id },
-  });
+  const vendor = await vendorRepo.deleteVendor(id);
 
   // Create audit log
   await createAuditLog(
@@ -148,41 +141,14 @@ export const createVendorChangeRequest = async (
   targetId: string | null,
   userId: string
 ): Promise<any> => {
-  const changeRequest = await prisma.changeRequest.create({
-    data: {
-      entity_type: EntityType.vendor,
-      operation,
-      payload: data as any,
-      target_id: targetId,
-      status: ChangeRequestStatus.pending,
-      requested_by: userId,
-    },
-    include: {
-      requester: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  return {
-    id: changeRequest.id,
-    entity_type: changeRequest.entity_type,
-    operation: changeRequest.operation,
-    payload: changeRequest.payload,
-    target_id: changeRequest.target_id,
-    status: changeRequest.status,
-    requested_by: changeRequest.requested_by,
-    requester_name: changeRequest.requester.name,
-    requester_email: changeRequest.requester.email,
-    reviewed_by: changeRequest.reviewed_by,
-    reviewed_at: changeRequest.reviewed_at,
-    reason: changeRequest.reason,
-    created_at: changeRequest.created_at,
-    updated_at: changeRequest.updated_at,
-  };
+  const changeRequest = await crRepo.create({
+    entity_type: EntityType.VENDOR,
+    operation,
+    payload: data as any,
+    target_id: targetId,
+    requested_by: userId,
+  } as any);
+  return changeRequest;
 };
 
 /**
@@ -196,107 +162,72 @@ export const executeVendorChangeRequest = async (
 
   // Use a transaction to ensure atomicity
   try {
-    result = await prisma.$transaction(async (tx) => {
+    result = await withTx(async (client) => {
       switch (changeRequest.operation) {
-        case OperationType.create:
-          // Create the vendor
-          const createdVendor = await tx.vendor.create({
-            data: changeRequest.payload,
-          });
+        case OperationType.CREATE: {
+          const insertSql = `
+            INSERT INTO vendors (name, contact_person, phone, email, address, notes, rating, status)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+            RETURNING id, name, contact_person, phone, email, address, notes, rating, status, created_at, updated_at`;
+          const payload = changeRequest.payload;
+          const { rows } = await client.query(insertSql, [
+            payload.name,
+            payload.contact_person,
+            payload.phone,
+            payload.email ?? null,
+            payload.address,
+            payload.notes ?? null,
+            payload.rating ?? null,
+            payload.status,
+          ]);
+          const createdVendor = rows[0];
 
-          // Create audit log
           await createAuditLog(
             reviewerId,
             'create_approved',
             'vendor',
             createdVendor.id,
-            { 
-              vendor: createdVendor,
-              change_request_id: changeRequest.id 
-            }
+            { vendor: createdVendor, change_request_id: changeRequest.id }
           );
-
           return createdVendor;
+        }
+        case OperationType.UPDATE: {
+          if (!changeRequest.target_id) throw new Error('Target ID is required for update operation');
+          const before = await vendorRepo.findVendorById(changeRequest.target_id);
+          if (!before) throw new Error('Vendor not found');
 
-        case OperationType.update:
-          if (!changeRequest.target_id) {
-            throw new Error('Target ID is required for update operation');
-          }
+          const updated = await vendorRepo.updateVendor(changeRequest.target_id, changeRequest.payload);
 
-          // Lock the row by selecting it for update
-          const vendorToUpdate = await tx.vendor.findUnique({
-            where: { id: changeRequest.target_id },
-          });
-
-          if (!vendorToUpdate) {
-            throw new Error('Vendor not found');
-          }
-
-          // Update the vendor
-          const updatedVendor = await tx.vendor.update({
-            where: { id: changeRequest.target_id },
-            data: changeRequest.payload,
-          });
-
-          // Create audit log
           await createAuditLog(
             reviewerId,
             'update_approved',
             'vendor',
-            updatedVendor.id,
-            { 
-              before: vendorToUpdate,
-              after: updatedVendor,
-              change_request_id: changeRequest.id 
-            }
+            updated.id,
+            { before, after: updated, change_request_id: changeRequest.id }
           );
+          return updated;
+        }
+        case OperationType.DELETE: {
+          if (!changeRequest.target_id) throw new Error('Target ID is required for delete operation');
+          const before = await vendorRepo.findVendorById(changeRequest.target_id);
+          if (!before) throw new Error('Vendor not found');
 
-          return updatedVendor;
+          const deleted = await vendorRepo.deleteVendor(changeRequest.target_id);
 
-        case OperationType.delete:
-          if (!changeRequest.target_id) {
-            throw new Error('Target ID is required for delete operation');
-          }
-
-          // Lock the row by selecting it for update
-          const vendorToDelete = await tx.vendor.findUnique({
-            where: { id: changeRequest.target_id },
-          });
-
-          if (!vendorToDelete) {
-            throw new Error('Vendor not found');
-          }
-
-          // Delete the vendor
-          const deletedVendor = await tx.vendor.delete({
-            where: { id: changeRequest.target_id },
-          });
-
-          // Create audit log
           await createAuditLog(
             reviewerId,
             'delete_approved',
             'vendor',
-            deletedVendor.id,
-            { 
-              vendor: deletedVendor,
-              change_request_id: changeRequest.id 
-            }
+            deleted.id,
+            { vendor: deleted, change_request_id: changeRequest.id }
           );
-
-          return deletedVendor;
-
+          return deleted;
+        }
         default:
           throw new Error(`Unsupported operation: ${changeRequest.operation}`);
       }
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // Handle unique constraint violations
-      if (error.code === 'P2002') {
-        throw new AppError(`A vendor with this ${error.meta?.target} already exists`, 400);
-      }
-    }
     throw error;
   }
 

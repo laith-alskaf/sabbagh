@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { OperationType, UserRole } from '@prisma/client';
+import { OperationType, UserRole } from '../types/models';
 import * as itemService from '../services/itemService';
 import { CreateItemRequest, UpdateItemRequest } from '../types/item';
 import { AppError, asyncHandler } from '../middlewares/errorMiddleware';
@@ -63,7 +63,7 @@ export const createItem = asyncHandler(async (req: Request, res: Response) => {
   }
   
   // If user is a manager, create the item directly
-  if (req.user.role === UserRole.manager) {
+  if (req.user.role === UserRole.MANAGER) {
     try {
       const item = await itemService.createItem(itemData, req.user.userId);
       
@@ -82,10 +82,10 @@ export const createItem = asyncHandler(async (req: Request, res: Response) => {
       );
     }
   } 
-  // If user is an employee, create a change request
-  else if (req.user.role === UserRole.employee) {
+  // If user is an assistant manager, create a change request
+  else if (req.user.role === UserRole.ASSISTANT_MANAGER) {
     const changeRequest = await itemService.createItemChangeRequest(
-      OperationType.create,
+      OperationType.CREATE,
       itemData,
       null,
       req.user.userId
@@ -121,7 +121,7 @@ export const updateItem = asyncHandler(async (req: Request, res: Response) => {
   }
   
   // If user is a manager, update the item directly
-  if (req.user.role === UserRole.manager) {
+  if (req.user.role === UserRole.MANAGER) {
     try {
       const item = await itemService.updateItem(id, itemData, req.user.userId);
       
@@ -140,10 +140,10 @@ export const updateItem = asyncHandler(async (req: Request, res: Response) => {
       );
     }
   } 
-  // If user is an employee, create a change request
-  else if (req.user.role === UserRole.employee) {
+  // If user is an assistant manager, create a change request
+  else if (req.user.role === UserRole.ASSISTANT_MANAGER) {
     const changeRequest = await itemService.createItemChangeRequest(
-      OperationType.update,
+      OperationType.UPDATE,
       itemData,
       id,
       req.user.userId
@@ -178,7 +178,7 @@ export const deleteItem = asyncHandler(async (req: Request, res: Response) => {
   }
   
   // If user is a manager, delete the item directly
-  if (req.user.role === UserRole.manager) {
+  if (req.user.role === UserRole.MANAGER) {
     await itemService.deleteItem(id, req.user.userId);
     
     res.status(200).json({
@@ -187,10 +187,10 @@ export const deleteItem = asyncHandler(async (req: Request, res: Response) => {
       data: null,
     });
   } 
-  // If user is an employee, create a change request
-  else if (req.user.role === UserRole.employee) {
+  // If user is an assistant manager, create a change request
+  else if (req.user.role === UserRole.ASSISTANT_MANAGER) {
     const changeRequest = await itemService.createItemChangeRequest(
-      OperationType.delete,
+      OperationType.DELETE,
       {},
       id,
       req.user.userId

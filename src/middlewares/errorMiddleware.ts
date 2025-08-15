@@ -6,11 +6,13 @@ import { env } from '../config/env';
 export class AppError extends Error {
   statusCode: number;
   isOperational: boolean;
+  errors?: Array<{ field: string; message: string }>;
 
-  constructor(message: string, statusCode: number) {
+  constructor(message: string, statusCode: number, errors?: Array<{ field: string; message: string }>) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = true;
+    this.errors = errors;
 
     Error.captureStackTrace(this, this.constructor);
   }
@@ -59,13 +61,18 @@ export const errorHandler = (
   }
 
   // Send response
-  res.status(statusCode).json({
+  const response: any = {
     success: false,
-    error: {
-      message,
-      ...(stack && { stack }),
-    },
-  });
+    message,
+    ...(stack && { stack }),
+  };
+
+  // Add validation errors if they exist
+  if ('errors' in err && err.errors) {
+    response.errors = err.errors;
+  }
+
+  res.status(statusCode).json(response);
 };
 
 // Async handler to catch errors in async routes

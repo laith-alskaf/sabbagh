@@ -25,4 +25,6 @@ export const env = {
     email: process.env.DEFAULT_MANAGER_EMAIL || 'manager@sabbagh.com',
     password: process.env.DEFAULT_MANAGER_PASSWORD || 'Manager@123',
   },
+  
+  logsDir: process.env.LOGS_DIR || path.resolve(__dirname, '../../logs'),
 };

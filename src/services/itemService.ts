@@ -1,9 +1,10 @@
-import { PrismaClient, Prisma, EntityType, OperationType, ChangeRequestStatus, UserRole } from '@prisma/client';
+import { EntityType, OperationType, ChangeRequestStatus } from '../types/models';
 import { CreateItemRequest, UpdateItemRequest, ItemResponse } from '../types/item';
 import { createAuditLog } from './auditService';
 import { AppError } from '../middlewares/errorMiddleware';
-
-const prisma = new PrismaClient();
+import * as itemRepo from '../repositories/itemRepository';
+import * as crRepo from '../repositories/changeRequestRepository';
+import { withTx } from '../repositories/tx';
 
 /**
  * Get all items with optional filters
@@ -32,15 +33,13 @@ export const getItems = async (
     where.status = status;
   }
 
-  const items = await prisma.item.findMany({
-    where,
-    orderBy: {
-      name: 'asc',
-    },
-    take: limit,
-    skip: offset,
+  const items = await itemRepo.findItems({
+    name,
+    code,
+    status,
+    limit,
+    offset,
   });
-
   return items;
 };
 
@@ -48,10 +47,7 @@ export const getItems = async (
  * Get an item by ID
  */
 export const getItemById = async (id: string): Promise<ItemResponse | null> => {
-  const item = await prisma.item.findUnique({
-    where: { id },
-  });
-
+  const item = await itemRepo.findItemById(id);
   return item;
 };
 
@@ -63,8 +59,16 @@ export const createItem = async (
   userId: string
 ): Promise<ItemResponse> => {
   try {
-    const item = await prisma.item.create({
-      data,
+    const existing = await itemRepo.findItemByCode(data.code);
+    if (existing) {
+      throw new AppError(`An item with this code already exists`, 400);
+    }
+    const item = await itemRepo.createItem({
+      name: data.name,
+      description: data.description ?? null,
+      unit: data.unit,
+      code: data.code,
+      status: data.status,
     });
 
     // Create audit log
@@ -78,11 +82,9 @@ export const createItem = async (
 
     return item;
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // Handle unique constraint violations
-      if (error.code === 'P2002') {
-        throw new AppError(`An item with this code already exists`, 400);
-      }
+    // Surface duplicate code constraint errors from the database
+    if (error instanceof Error && /items.*code/i.test(error.message)) {
+      throw new AppError(`An item with this code already exists`, 400);
     }
     throw error;
   }
@@ -98,18 +100,13 @@ export const updateItem = async (
 ): Promise<ItemResponse> => {
   try {
     // Get the item before update for audit log
-    const itemBefore = await prisma.item.findUnique({
-      where: { id },
-    });
+    const itemBefore = await itemRepo.findItemById(id);
 
     if (!itemBefore) {
       throw new Error('Item not found');
     }
 
-    const item = await prisma.item.update({
-      where: { id },
-      data,
-    });
+    const item = await itemRepo.updateItem(id, data as any);
 
     // Create audit log
     await createAuditLog(
@@ -122,11 +119,9 @@ export const updateItem = async (
 
     return item;
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // Handle unique constraint violations
-      if (error.code === 'P2002') {
-        throw new AppError(`An item with this code already exists`, 400);
-      }
+    // Surface duplicate code constraint errors from the database
+    if (error instanceof Error && /items.*code/i.test(error.message)) {
+      throw new AppError(`An item with this code already exists`, 400);
     }
     throw error;
   }
@@ -140,17 +135,13 @@ export const deleteItem = async (
   userId: string
 ): Promise<ItemResponse> => {
   // Get the item before delete for audit log
-  const itemBefore = await prisma.item.findUnique({
-    where: { id },
-  });
+  const itemBefore = await itemRepo.findItemById(id);
 
   if (!itemBefore) {
     throw new Error('Item not found');
   }
 
-  const item = await prisma.item.delete({
-    where: { id },
-  });
+  const item = await itemRepo.deleteItem(id);
 
   // Create audit log
   await createAuditLog(
@@ -173,41 +164,14 @@ export const createItemChangeRequest = async (
   targetId: string | null,
   userId: string
 ): Promise<any> => {
-  const changeRequest = await prisma.changeRequest.create({
-    data: {
-      entity_type: EntityType.item,
-      operation,
-      payload: data as any,
-      target_id: targetId,
-      status: ChangeRequestStatus.pending,
-      requested_by: userId,
-    },
-    include: {
-      requester: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  return {
-    id: changeRequest.id,
-    entity_type: changeRequest.entity_type,
-    operation: changeRequest.operation,
-    payload: changeRequest.payload,
-    target_id: changeRequest.target_id,
-    status: changeRequest.status,
-    requested_by: changeRequest.requested_by,
-    requester_name: changeRequest.requester.name,
-    requester_email: changeRequest.requester.email,
-    reviewed_by: changeRequest.reviewed_by,
-    reviewed_at: changeRequest.reviewed_at,
-    reason: changeRequest.reason,
-    created_at: changeRequest.created_at,
-    updated_at: changeRequest.updated_at,
-  };
+  const changeRequest = await crRepo.create({
+    entity_type: EntityType.ITEM,
+    operation,
+    payload: data as any,
+    target_id: targetId,
+    requested_by: userId,
+  } as any);
+  return changeRequest;
 };
 
 /**
@@ -221,129 +185,85 @@ export const executeItemChangeRequest = async (
 
   // Use a transaction to ensure atomicity
   try {
-    result = await prisma.$transaction(async (tx) => {
+    result = await withTx(async (client) => {
       switch (changeRequest.operation) {
-        case OperationType.create:
-          // Check if an item with the same code already exists
+        case OperationType.CREATE: {
+          // Check unique code if provided
           if (changeRequest.payload.code) {
-            const existingItem = await tx.item.findUnique({
-              where: { code: changeRequest.payload.code },
-            });
-
-            if (existingItem) {
+            const { rows: exists } = await client.query(
+              'SELECT 1 FROM items WHERE code = $1',
+              [changeRequest.payload.code]
+            );
+            if (exists[0]) {
               throw new AppError(`An item with code ${changeRequest.payload.code} already exists`, 400);
             }
           }
 
-          // Create the item
-          const createdItem = await tx.item.create({
-            data: changeRequest.payload,
-          });
+          const payload = changeRequest.payload;
+          const { rows } = await client.query(
+            `INSERT INTO items (name, description, unit, code, status)
+             VALUES ($1,$2,$3,$4,$5)
+             RETURNING id, name, description, unit, code, status, created_at, updated_at`,
+            [payload.name, payload.description ?? null, payload.unit, payload.code, payload.status]
+          );
+          const createdItem = rows[0];
 
-          // Create audit log
           await createAuditLog(
             reviewerId,
             'create_approved',
             'item',
             createdItem.id,
-            { 
-              item: createdItem,
-              change_request_id: changeRequest.id 
-            }
+            { item: createdItem, change_request_id: changeRequest.id }
           );
-
           return createdItem;
+        }
+        case OperationType.UPDATE: {
+          if (!changeRequest.target_id) throw new Error('Target ID is required for update operation');
+          const before = await itemRepo.findItemById(changeRequest.target_id);
+          if (!before) throw new Error('Item not found');
 
-        case OperationType.update:
-          if (!changeRequest.target_id) {
-            throw new Error('Target ID is required for update operation');
-          }
-
-          // Lock the row by selecting it for update
-          const itemToUpdate = await tx.item.findUnique({
-            where: { id: changeRequest.target_id },
-          });
-
-          if (!itemToUpdate) {
-            throw new Error('Item not found');
-          }
-
-          // Check if code is being updated and if it's unique
-          if (changeRequest.payload.code && changeRequest.payload.code !== itemToUpdate.code) {
-            const existingItem = await tx.item.findUnique({
-              where: { code: changeRequest.payload.code },
-            });
-
-            if (existingItem) {
+          if (changeRequest.payload.code && changeRequest.payload.code !== before.code) {
+            const { rows: exists } = await client.query(
+              'SELECT 1 FROM items WHERE code = $1',
+              [changeRequest.payload.code]
+            );
+            if (exists[0]) {
               throw new AppError(`An item with code ${changeRequest.payload.code} already exists`, 400);
             }
           }
 
-          // Update the item
-          const updatedItem = await tx.item.update({
-            where: { id: changeRequest.target_id },
-            data: changeRequest.payload,
-          });
+          const updated = await itemRepo.updateItem(changeRequest.target_id, changeRequest.payload);
 
-          // Create audit log
           await createAuditLog(
             reviewerId,
             'update_approved',
             'item',
-            updatedItem.id,
-            { 
-              before: itemToUpdate,
-              after: updatedItem,
-              change_request_id: changeRequest.id 
-            }
+            updated.id,
+            { before, after: updated, change_request_id: changeRequest.id }
           );
+          return updated;
+        }
+        case OperationType.DELETE: {
+          if (!changeRequest.target_id) throw new Error('Target ID is required for delete operation');
+          const before = await itemRepo.findItemById(changeRequest.target_id);
+          if (!before) throw new Error('Item not found');
 
-          return updatedItem;
+          const deleted = await itemRepo.deleteItem(changeRequest.target_id);
 
-        case OperationType.delete:
-          if (!changeRequest.target_id) {
-            throw new Error('Target ID is required for delete operation');
-          }
-
-          // Lock the row by selecting it for update
-          const itemToDelete = await tx.item.findUnique({
-            where: { id: changeRequest.target_id },
-          });
-
-          if (!itemToDelete) {
-            throw new Error('Item not found');
-          }
-
-          // Delete the item
-          const deletedItem = await tx.item.delete({
-            where: { id: changeRequest.target_id },
-          });
-
-          // Create audit log
           await createAuditLog(
             reviewerId,
             'delete_approved',
             'item',
-            deletedItem.id,
-            { 
-              item: deletedItem,
-              change_request_id: changeRequest.id 
-            }
+            deleted.id,
+            { item: deleted, change_request_id: changeRequest.id }
           );
-
-          return deletedItem;
-
+          return deleted;
+        }
         default:
           throw new Error(`Unsupported operation: ${changeRequest.operation}`);
       }
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // Handle unique constraint violations
-      if (error.code === 'P2002') {
-        throw new AppError(`An item with this code already exists`, 400);
-      }
-    }
     throw error;
   }
 

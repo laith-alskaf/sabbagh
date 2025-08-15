@@ -1,4 +1,4 @@
-import { VendorStatus } from '@prisma/client';
+import { VendorStatus } from '../types/models';
 
 export interface CreateVendorRequest {
   name: string;

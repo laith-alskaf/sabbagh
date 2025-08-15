@@ -1,4 +1,4 @@
-import { ItemStatus } from '@prisma/client';
+import { ItemStatus } from '../types/models';
 
 export interface CreateItemRequest {
   name: string;

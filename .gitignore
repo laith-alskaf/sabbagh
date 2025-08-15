@@ -9,3 +9,10 @@ docs/
 scripts/
 prisma/
 .zencoder
+test-api-comprehensive.js
+test-db-connection.js
+run-migration.js
+jest.config.js
+db/migrations
+coverage
+logs

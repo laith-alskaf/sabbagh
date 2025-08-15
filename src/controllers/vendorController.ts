@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { OperationType, UserRole } from '@prisma/client';
+import { OperationType, UserRole } from '../types/models';
 import * as vendorService from '../services/vendorService';
 import { CreateVendorRequest, UpdateVendorRequest } from '../types/vendor';
 import { AppError, asyncHandler } from '../middlewares/errorMiddleware';
@@ -62,7 +62,7 @@ export const createVendor = asyncHandler(async (req: Request, res: Response) => 
   }
   
   // If user is a manager, create the vendor directly
-  if (req.user.role === UserRole.manager) {
+  if (req.user.role === UserRole.MANAGER) {
     const vendor = await vendorService.createVendor(vendorData, req.user.userId);
     
     res.status(201).json({
@@ -71,10 +71,10 @@ export const createVendor = asyncHandler(async (req: Request, res: Response) => 
       data: vendor,
     });
   } 
-  // If user is an employee, create a change request
-  else if (req.user.role === UserRole.employee) {
+  // If user is an assistant manager, create a change request
+  else if (req.user.role === UserRole.ASSISTANT_MANAGER) {
     const changeRequest = await vendorService.createVendorChangeRequest(
-      OperationType.create,
+      OperationType.CREATE,
       vendorData,
       null,
       req.user.userId
@@ -110,7 +110,7 @@ export const updateVendor = asyncHandler(async (req: Request, res: Response) => 
   }
   
   // If user is a manager, update the vendor directly
-  if (req.user.role === UserRole.manager) {
+  if (req.user.role === UserRole.MANAGER) {
     const vendor = await vendorService.updateVendor(id, vendorData, req.user.userId);
     
     res.status(200).json({
@@ -119,10 +119,10 @@ export const updateVendor = asyncHandler(async (req: Request, res: Response) => 
       data: vendor,
     });
   } 
-  // If user is an employee, create a change request
-  else if (req.user.role === UserRole.employee) {
+  // If user is an assistant manager, create a change request
+  else if (req.user.role === UserRole.ASSISTANT_MANAGER) {
     const changeRequest = await vendorService.createVendorChangeRequest(
-      OperationType.update,
+      OperationType.UPDATE,
       vendorData,
       id,
       req.user.userId
@@ -157,7 +157,7 @@ export const deleteVendor = asyncHandler(async (req: Request, res: Response) => 
   }
   
   // If user is a manager, delete the vendor directly
-  if (req.user.role === UserRole.manager) {
+  if (req.user.role === UserRole.MANAGER) {
     await vendorService.deleteVendor(id, req.user.userId);
     
     res.status(200).json({
@@ -166,10 +166,10 @@ export const deleteVendor = asyncHandler(async (req: Request, res: Response) => 
       data: null,
     });
   } 
-  // If user is an employee, create a change request
-  else if (req.user.role === UserRole.employee) {
+  // If user is an assistant manager, create a change request
+  else if (req.user.role === UserRole.ASSISTANT_MANAGER) {
     const changeRequest = await vendorService.createVendorChangeRequest(
-      OperationType.delete,
+      OperationType.DELETE,
       {},
       id,
       req.user.userId

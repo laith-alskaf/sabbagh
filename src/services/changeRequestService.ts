@@ -1,11 +1,10 @@
-import { PrismaClient, ChangeRequestStatus, EntityType } from '@prisma/client';
+import { ChangeRequestStatus, EntityType } from '../types/models';
 import { ChangeRequestResponse } from '../types/changeRequest';
 import { executeVendorChangeRequest } from './vendorService';
 import { executeItemChangeRequest } from './itemService';
 import { createAuditLog } from './auditService';
 import { AppError } from '../middlewares/errorMiddleware';
-
-const prisma = new PrismaClient();
+import * as crRepo from '../repositories/changeRequestRepository';
 
 /**
  * Get all change requests with optional filters
@@ -31,93 +30,23 @@ export const getChangeRequests = async (
     where.requested_by = requestedBy;
   }
 
-  const changeRequests = await prisma.changeRequest.findMany({
-    where,
-    include: {
-      requester: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-      reviewer: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-    orderBy: {
-      created_at: 'desc',
-    },
-    take: limit,
-    skip: offset,
+  const changeRequests = await crRepo.findChangeRequests({
+    status,
+    entityType,
+    requestedBy,
+    limit,
+    offset,
   });
-
-  return changeRequests.map((cr) => ({
-    id: cr.id,
-    entity_type: cr.entity_type,
-    operation: cr.operation,
-    payload: cr.payload,
-    target_id: cr.target_id,
-    status: cr.status,
-    requested_by: cr.requested_by,
-    requester_name: cr.requester.name,
-    requester_email: cr.requester.email,
-    reviewed_by: cr.reviewed_by,
-    reviewer_name: cr.reviewer?.name,
-    reviewer_email: cr.reviewer?.email,
-    reviewed_at: cr.reviewed_at,
-    reason: cr.reason,
-    created_at: cr.created_at,
-    updated_at: cr.updated_at,
-  }));
+  return changeRequests;
 };
 
 /**
  * Get a change request by ID
  */
 export const getChangeRequestById = async (id: string): Promise<ChangeRequestResponse | null> => {
-  const changeRequest = await prisma.changeRequest.findUnique({
-    where: { id },
-    include: {
-      requester: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-      reviewer: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  if (!changeRequest) {
-    return null;
-  }
-
-  return {
-    id: changeRequest.id,
-    entity_type: changeRequest.entity_type,
-    operation: changeRequest.operation,
-    payload: changeRequest.payload,
-    target_id: changeRequest.target_id,
-    status: changeRequest.status,
-    requested_by: changeRequest.requested_by,
-    requester_name: changeRequest.requester.name,
-    requester_email: changeRequest.requester.email,
-    reviewed_by: changeRequest.reviewed_by,
-    reviewer_name: changeRequest.reviewer?.name,
-    reviewer_email: changeRequest.reviewer?.email,
-    reviewed_at: changeRequest.reviewed_at,
-    reason: changeRequest.reason,
-    created_at: changeRequest.created_at,
-    updated_at: changeRequest.updated_at,
-  };
+  const changeRequest = await crRepo.findById(id);
+  if (!changeRequest) return null;
+  return changeRequest;
 };
 
 /**
@@ -128,15 +57,13 @@ export const approveChangeRequest = async (
   reviewerId: string
 ): Promise<ChangeRequestResponse> => {
   // Get the change request
-  const changeRequest = await prisma.changeRequest.findUnique({
-    where: { id },
-  });
+  const changeRequest = await crRepo.findById(id);
 
   if (!changeRequest) {
     throw new Error('Change request not found');
   }
 
-  if (changeRequest.status !== ChangeRequestStatus.pending) {
+  if (changeRequest.status !== ChangeRequestStatus.PENDING) {
     throw new Error(`Change request is already ${changeRequest.status}`);
   }
 
@@ -144,37 +71,16 @@ export const approveChangeRequest = async (
 
   try {
     // Execute the change request based on entity type
-    if (changeRequest.entity_type === EntityType.vendor) {
+    if (changeRequest.entity_type === EntityType.VENDOR) {
       result = await executeVendorChangeRequest(changeRequest, reviewerId);
-    } else if (changeRequest.entity_type === EntityType.item) {
+    } else if (changeRequest.entity_type === EntityType.ITEM) {
       result = await executeItemChangeRequest(changeRequest, reviewerId);
     } else {
       throw new Error(`Unsupported entity type: ${changeRequest.entity_type}`);
     }
 
     // Update the change request status
-    const updatedChangeRequest = await prisma.changeRequest.update({
-      where: { id },
-      data: {
-        status: ChangeRequestStatus.approved,
-        reviewed_by: reviewerId,
-        reviewed_at: new Date(),
-      },
-      include: {
-        requester: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-        reviewer: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    const updatedChangeRequest = await crRepo.approve(id, reviewerId);
 
     // Create audit log for the approval
     await createAuditLog(
@@ -193,24 +99,7 @@ export const approveChangeRequest = async (
       }
     );
 
-    return {
-      id: updatedChangeRequest.id,
-      entity_type: updatedChangeRequest.entity_type,
-      operation: updatedChangeRequest.operation,
-      payload: updatedChangeRequest.payload,
-      target_id: updatedChangeRequest.target_id,
-      status: updatedChangeRequest.status,
-      requested_by: updatedChangeRequest.requested_by,
-      requester_name: updatedChangeRequest.requester.name,
-      requester_email: updatedChangeRequest.requester.email,
-      reviewed_by: updatedChangeRequest.reviewed_by,
-      reviewer_name: updatedChangeRequest.reviewer?.name,
-      reviewer_email: updatedChangeRequest.reviewer?.email,
-      reviewed_at: updatedChangeRequest.reviewed_at,
-      reason: updatedChangeRequest.reason,
-      created_at: updatedChangeRequest.created_at,
-      updated_at: updatedChangeRequest.updated_at,
-    };
+    return updatedChangeRequest;
   } catch (error) {
     // If there's an error during execution, we don't update the change request status
     if (error instanceof AppError) {
@@ -232,42 +121,18 @@ export const rejectChangeRequest = async (
   reason?: string
 ): Promise<ChangeRequestResponse> => {
   // Get the change request
-  const changeRequest = await prisma.changeRequest.findUnique({
-    where: { id },
-  });
+  const changeRequest = await crRepo.findById(id);
 
   if (!changeRequest) {
     throw new Error('Change request not found');
   }
 
-  if (changeRequest.status !== ChangeRequestStatus.pending) {
+  if (changeRequest.status !== ChangeRequestStatus.PENDING) {
     throw new Error(`Change request is already ${changeRequest.status}`);
   }
 
   // Update the change request status
-  const updatedChangeRequest = await prisma.changeRequest.update({
-    where: { id },
-    data: {
-      status: ChangeRequestStatus.rejected,
-      reviewed_by: reviewerId,
-      reviewed_at: new Date(),
-      reason,
-    },
-    include: {
-      requester: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-      reviewer: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
+  const updatedChangeRequest = await crRepo.reject(id, reviewerId, reason);
 
   // Create audit log for the rejection
   await createAuditLog(
@@ -286,22 +151,5 @@ export const rejectChangeRequest = async (
     }
   );
 
-  return {
-    id: updatedChangeRequest.id,
-    entity_type: updatedChangeRequest.entity_type,
-    operation: updatedChangeRequest.operation,
-    payload: updatedChangeRequest.payload,
-    target_id: updatedChangeRequest.target_id,
-    status: updatedChangeRequest.status,
-    requested_by: updatedChangeRequest.requested_by,
-    requester_name: updatedChangeRequest.requester.name,
-    requester_email: updatedChangeRequest.requester.email,
-    reviewed_by: updatedChangeRequest.reviewed_by,
-    reviewer_name: updatedChangeRequest.reviewer?.name,
-    reviewer_email: updatedChangeRequest.reviewer?.email,
-    reviewed_at: updatedChangeRequest.reviewed_at,
-    reason: updatedChangeRequest.reason,
-    created_at: updatedChangeRequest.created_at,
-    updated_at: updatedChangeRequest.updated_at,
-  };
+  return updatedChangeRequest;
 };

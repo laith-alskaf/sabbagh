@@ -1,31 +1,28 @@
-import prisma from './prisma';
+import { Pool } from 'pg';
+import dotenv from 'dotenv';
 
-/**
- * Initialize database connection
- */
-export const initializeDatabase = async (): Promise<void> => {
-  try {
-    // Test database connection
-    await prisma.$connect();
-    console.log('✅ Database connection established successfully');
-    
-    // Disconnect after testing
-    await prisma.$disconnect();
-  } catch (error) {
-    console.error('❌ Failed to connect to the database:', error);
-    process.exit(1);
-  }
-};
+dotenv.config();
 
-/**
- * Close database connection
- */
-export const closeDatabase = async (): Promise<void> => {
+// Application should use DATABASE_URL (Supabase Pooler 6543)
+// Migrations should use DIRECT_URL (Supabase direct 5432)
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  // Fail fast to surface env misconfiguration
+  throw new Error('DATABASE_URL is not set in the environment');
+}
+
+export const pool = new Pool({
+  connectionString,
+  ssl: { rejectUnauthorized: false }, // Supabase requires SSL
+});
+
+// Optional: quick connectivity check helper
+export async function testDbConnection(): Promise<void> {
+  const client = await pool.connect();
   try {
-    await prisma.$disconnect();
-    console.log('✅ Database connection closed successfully');
-  } catch (error) {
-    console.error('❌ Failed to close database connection:', error);
-    process.exit(1);
+    await client.query('SELECT 1');
+  } finally {
+    client.release();
   }
-};
+}

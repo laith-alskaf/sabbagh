@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { pool } from '../config/database';
 import { AuditLogResponse } from '../types/audit';
 
-const prisma = new PrismaClient();
-
 /**
- * Create an audit log entry
+ * Create an audit log entry (pg implementation)
  */
 export const createAuditLog = async (
   actorId: string,
@@ -13,39 +11,45 @@ export const createAuditLog = async (
   entityId: string | null,
   details: any
 ): Promise<AuditLogResponse> => {
-  const auditLog = await prisma.auditLog.create({
-    data: {
-      actor_id: actorId,
-      action,
-      entity_type: entityType,
-      entity_id: entityId,
-      details,
-    },
-    include: {
-      actor: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
+  // Use CTE to insert then return with joined actor info
+  const sql = `
+    with inserted as (
+      insert into audit_logs (actor_id, action, entity_type, entity_id, details)
+      values ($1, $2, $3, $4, $5)
+      returning id, actor_id, action, entity_type, entity_id, details, created_at
+    )
+    select i.id,
+           i.actor_id,
+           u.name  as actor_name,
+           u.email as actor_email,
+           i.action,
+           i.entity_type,
+           i.entity_id,
+           i.details,
+           i.created_at
+    from inserted i
+    left join users u on u.id = i.actor_id
+  `;
+
+  const params = [actorId, action, entityType, entityId, details];
+  const { rows } = await pool.query(sql, params);
+  const row = rows[0];
 
   return {
-    id: auditLog.id,
-    actor_id: auditLog.actor_id,
-    actor_name: auditLog.actor.name,
-    actor_email: auditLog.actor.email,
-    action: auditLog.action,
-    entity_type: auditLog.entity_type,
-    entity_id: auditLog.entity_id,
-    details: auditLog.details,
-    created_at: auditLog.created_at,
+    id: row.id,
+    actor_id: row.actor_id,
+    actor_name: row.actor_name ?? undefined,
+    actor_email: row.actor_email ?? undefined,
+    action: row.action,
+    entity_type: row.entity_type,
+    entity_id: row.entity_id,
+    details: row.details,
+    created_at: row.created_at,
   };
 };
 
 /**
- * Get audit logs with optional filters
+ * Get audit logs with optional filters (pg implementation)
  */
 export const getAuditLogs = async (
   entityType?: string,
@@ -54,46 +58,59 @@ export const getAuditLogs = async (
   limit = 50,
   offset = 0
 ): Promise<AuditLogResponse[]> => {
-  const where: any = {};
+  const conditions: string[] = [];
+  const params: any[] = [];
 
   if (entityType) {
-    where.entity_type = entityType;
+    params.push(entityType);
+    conditions.push(`al.entity_type = $${params.length}`);
   }
 
   if (entityId) {
-    where.entity_id = entityId;
+    params.push(entityId);
+    conditions.push(`al.entity_id = $${params.length}`);
   }
 
   if (actorId) {
-    where.actor_id = actorId;
+    params.push(actorId);
+    conditions.push(`al.actor_id = $${params.length}`);
   }
 
-  const auditLogs = await prisma.auditLog.findMany({
-    where,
-    include: {
-      actor: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-    orderBy: {
-      created_at: 'desc',
-    },
-    take: limit,
-    skip: offset,
-  });
+  // Pagination params
+  params.push(limit);
+  const limitIndex = params.length;
+  params.push(offset);
+  const offsetIndex = params.length;
 
-  return auditLogs.map((log) => ({
-    id: log.id,
-    actor_id: log.actor_id,
-    actor_name: log.actor.name,
-    actor_email: log.actor.email,
-    action: log.action,
-    entity_type: log.entity_type,
-    entity_id: log.entity_id,
-    details: log.details,
-    created_at: log.created_at,
+  const whereClause = conditions.length ? `where ${conditions.join(' and ')}` : '';
+
+  const sql = `
+    select al.id,
+           al.actor_id,
+           u.name  as actor_name,
+           u.email as actor_email,
+           al.action,
+           al.entity_type,
+           al.entity_id,
+           al.details,
+           al.created_at
+    from audit_logs al
+    left join users u on u.id = al.actor_id
+    ${whereClause}
+    order by al.created_at desc
+    limit $${limitIndex} offset $${offsetIndex}
+  `;
+
+  const { rows } = await pool.query(sql, params);
+  return rows.map((row) => ({
+    id: row.id,
+    actor_id: row.actor_id,
+    actor_name: row.actor_name ?? undefined,
+    actor_email: row.actor_email ?? undefined,
+    action: row.action,
+    entity_type: row.entity_type,
+    entity_id: row.entity_id,
+    details: row.details,
+    created_at: row.created_at,
   }));
 };

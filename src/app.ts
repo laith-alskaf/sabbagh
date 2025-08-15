@@ -2,11 +2,15 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
+import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env';
 import routes from './routes';
 import { i18nextMiddleware } from './config/i18n';
-import { AppError, errorHandler, notFoundHandler } from './middlewares/errorMiddleware';
+import { errorHandler, notFoundHandler } from './middlewares/errorMiddleware';
+import { requestIdMiddleware, requestLoggingMiddleware, errorLoggingMiddleware } from './middlewares/loggingMiddleware';
 import { t } from './utils/i18n';
+import { specs } from './config/swagger';
 
 // Create Express app
 const app = express();
@@ -17,8 +21,14 @@ app.use(cors()); // Enable CORS
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
+// Request tracking middleware
+app.use(requestIdMiddleware);
+
 // i18n middleware
 app.use(i18nextMiddleware);
+
+// Request logging middleware
+app.use(requestLoggingMiddleware);
 
 // Logging
 if (env.isDevelopment) {
@@ -35,11 +45,24 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
+// Swagger documentation
+app.use('/api-docs', swaggerUi.serve);
+app.get('/api-docs', (req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, 'config', 'swagger-ui.html'));
+});
+app.get('/api-docs/swagger.json', (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(specs);
+});
+
 // API routes
 app.use('/api', routes);
 
 // Handle 404 errors
-app.all('*', notFoundHandler);
+// app.all('*', notFoundHandler);
+
+// Error logging middleware
+app.use(errorLoggingMiddleware);
 
 // Global error handler
 app.use(errorHandler);
