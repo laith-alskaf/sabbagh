@@ -16,3 +16,4 @@ jest.config.js
 db/migrations
 coverage
 logs
+db
