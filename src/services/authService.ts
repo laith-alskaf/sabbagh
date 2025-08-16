@@ -7,7 +7,8 @@ import { AuthTokenPayload, LoginRequest, ChangePasswordRequest } from '../types/
 import { User, UserRole } from '../types/models';
 
 // Determine which service to use
-const useMockData = env.useMockData || process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+// const useMockData = env.useMockData || process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+const useMockData = false;
 
 /**
  * Generate a JWT token for a user
@@ -59,7 +60,8 @@ export const login = async (loginData: LoginRequest) => {
   if (useMockData) {
     // Use mock data
     user = await mockUserService.findUserByEmail(loginData.email);
-  } else {
+  } 
+  else {
     // Use real database
     user = await users.findByEmail(loginData.email);
   }
