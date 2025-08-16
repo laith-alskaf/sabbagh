@@ -112,6 +112,12 @@ export const changePassword = async (userId: string, data: ChangePasswordRequest
  * Create or update the default manager account
  */
 export const seedDefaultManager = async (): Promise<void> => {
+  // Skip seeding if using mock data
+  if (env.useMockData) {
+    console.log('Using mock data - skipping default manager seeding');
+    return;
+  }
+
   const { name, email, password } = env.defaultManager;
   
   try {
@@ -138,6 +144,9 @@ export const seedDefaultManager = async (): Promise<void> => {
     console.log('Default manager account created successfully');
   } catch (error) {
     console.error('Failed to seed default manager account:', error);
-    throw error;
+    // Don't throw error in production to prevent app crash
+    if (env.isDevelopment) {
+      throw error;
+    }
   }
 };

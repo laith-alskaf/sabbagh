@@ -1,13 +1,12 @@
 {
   "name": "sabbagh",
   "version": "1.0.0",
-  "description": "��#\u0000 \u0000s\u0000a\u0000b\u0000b\u0000a\u0000g\u0000h\u0000\r\u0000 \u0000",
+  "description": "Sabbagh Purchasing Management System API",
   "main": "index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "nodemon src/index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    // "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",

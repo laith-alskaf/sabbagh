@@ -63,29 +63,34 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Add file transports in production
-if (!env.isDevelopment) {
-  // Create a daily rotate file for all logs
-  const allFileTransport = new winston.transports.DailyRotateFile({
-    filename: path.join(env.logsDir, 'application-%DATE%.log'),
-    datePattern: 'YYYY-MM-DD',
-    zippedArchive: true,
-    maxSize: '20m',
-    maxFiles: '14d',
-    level: 'info',
-  });
+// Add file transports in production (only if not in serverless environment)
+if (!env.isDevelopment && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  try {
+    // Create a daily rotate file for all logs
+    const allFileTransport = new winston.transports.DailyRotateFile({
+      filename: path.join(env.logsDir, 'application-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d',
+      level: 'info',
+    });
 
-  // Create a daily rotate file for error logs
-  const errorFileTransport = new winston.transports.DailyRotateFile({
-    filename: path.join(env.logsDir, 'error-%DATE%.log'),
-    datePattern: 'YYYY-MM-DD',
-    zippedArchive: true,
-    maxSize: '20m',
-    maxFiles: '14d',
-    level: 'error',
-  });
+    // Create a daily rotate file for error logs
+    const errorFileTransport = new winston.transports.DailyRotateFile({
+      filename: path.join(env.logsDir, 'error-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d',
+      level: 'error',
+    });
 
-  transports.push(allFileTransport, errorFileTransport);
+    transports.push(allFileTransport, errorFileTransport);
+  } catch (error) {
+    // If file logging fails (e.g., in serverless environments), just use console
+    console.warn('File logging disabled due to read-only filesystem');
+  }
 }
 
 // Create the logger
