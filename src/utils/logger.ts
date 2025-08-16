@@ -1,6 +1,7 @@
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 import path from 'path';
+import fs from 'fs';
 import { env } from '../config/env';
 
 // Define log levels
@@ -64,8 +65,13 @@ const transports: winston.transport[] = [
 ];
 
 // Add file transports in production (only if not in serverless environment)
-if (!env.isDevelopment && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+if (!env.isDevelopment && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.LAMBDA_TASK_ROOT) {
   try {
+    // Check if we can write to the logs directory
+    if (!fs.existsSync(env.logsDir)) {
+      fs.mkdirSync(env.logsDir, { recursive: true });
+    }
+    
     // Create a daily rotate file for all logs
     const allFileTransport = new winston.transports.DailyRotateFile({
       filename: path.join(env.logsDir, 'application-%DATE%.log'),
@@ -87,10 +93,13 @@ if (!env.isDevelopment && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTIO
     });
 
     transports.push(allFileTransport, errorFileTransport);
+    console.log('File logging enabled');
   } catch (error) {
     // If file logging fails (e.g., in serverless environments), just use console
-    console.warn('File logging disabled due to read-only filesystem');
+    console.warn('File logging disabled due to read-only filesystem:', error);
   }
+} else {
+  console.log('File logging disabled - running in serverless environment');
 }
 
 // Create the logger
