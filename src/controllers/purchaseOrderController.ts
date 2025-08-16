@@ -160,11 +160,11 @@ export const createPurchaseOrder = asyncHandler(async (req: Request, res: Respon
   const purchaseOrderData: CreatePurchaseOrderRequest = req.body;
 
   // Validate required fields
-  if (!purchaseOrderData.request_date || !purchaseOrderData.department || 
-      !purchaseOrderData.request_type || !purchaseOrderData.requester_name || 
-      !purchaseOrderData.currency || !purchaseOrderData.items || purchaseOrderData.items.length === 0) {
-    throw new AppError(t(req, 'validation.requiredFields', { ns: 'errors' }), 400);
-  }
+  // if (!purchaseOrderData.request_date || !purchaseOrderData.department || 
+  //     !purchaseOrderData.request_type || !purchaseOrderData.requester_name || 
+  //     !purchaseOrderData.currency || !purchaseOrderData.items || purchaseOrderData.items.length === 0) {
+  //   throw new AppError(t(req, 'validation.requiredFields', { ns: 'errors' }), 400);
+  // }
 
   const purchaseOrder = await purchaseOrderService.createPurchaseOrder(
     purchaseOrderData,

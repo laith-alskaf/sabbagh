@@ -4,28 +4,21 @@ import { z } from 'zod';
 const purchaseOrderItemSchema = z.object({
   id: z.string().optional(),
   item_id: z.string().optional(),
-  item_code: z.string().optional(),
-  item_name: z.string().min(1, { message: 'Item name is required' }).optional(),
+  item_name: z.string().min(1, { message: 'Item name is required' }),
   quantity: z.number().positive({ message: 'Quantity must be a positive number' }),
   unit: z.string().min(1, { message: 'Unit is required' }),
-  received_quantity: z.number().optional(),
-  price: z.number().nonnegative({ message: 'Price must be a non-negative number' }).optional(),
-  line_total: z.number().nonnegative().optional(),
-  currency: z.enum(['SYP', 'USD'], { message: 'Currency must be SYP or USD' }),
+  price: z.number().nonnegative({ message: 'Price must be a non-negative number' }),
 });
 
 // Create purchase order schema
 export const createPurchaseOrderSchema = z.object({
   department: z.string().min(1, { message: 'Department is required' }),
   request_date: z.string().or(z.date()),
-  request_type: z.enum(['purchase', 'maintenance'], { message: 'Request type must be purchase or maintenance' }),
-  requester_name: z.string().min(1, { message: 'Requester name is required' }),
   execution_date: z.string().or(z.date()).optional(),
   notes: z.string().optional(),
   supplier_id: z.string().optional(),
-  attachment_url: z.string().optional(),
-  total_amount: z.number().nonnegative().optional(),
-  currency: z.enum(['SYP', 'USD'], { message: 'Currency must be SYP or USD' }),
+  requester_name: z.string().optional(),
+  currency: z.string().default('SYP'),
   items: z.array(purchaseOrderItemSchema).min(1, { message: 'At least one item is required' }),
 });
 
@@ -33,14 +26,11 @@ export const createPurchaseOrderSchema = z.object({
 export const updatePurchaseOrderSchema = z.object({
   department: z.string().min(1, { message: 'Department is required' }).optional(),
   request_date: z.string().or(z.date()).optional(),
-  request_type: z.enum(['purchase', 'maintenance'], { message: 'Request type must be purchase or maintenance' }).optional(),
-  requester_name: z.string().min(1, { message: 'Requester name is required' }).optional(),
   execution_date: z.string().or(z.date()).optional(),
   notes: z.string().optional(),
   supplier_id: z.string().optional(),
-  attachment_url: z.string().optional(),
-  total_amount: z.number().nonnegative().optional(),
-  currency: z.enum(['SYP', 'USD'], { message: 'Currency must be SYP or USD' }).optional(),
+  requester_name: z.string().optional(),
+  currency: z.string().optional(),
   items: z.array(purchaseOrderItemSchema).min(1, { message: 'At least one item is required' }).optional(),
 });
 
