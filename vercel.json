@@ -5,27 +5,18 @@
       "src": "src/index.ts",
       "use": "@vercel/node",
       "config": {
-          "includeFiles": [
-         "./src/**",
-         "./dist/**",
-        "./node_modules/swagger-ui-dist/**"
-       ]
+        "includeFiles": [
+          "./src/**",
+          "./dist/**",
+          "./node_modules/swagger-ui-dist/**"
+        ]
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "src/index.ts"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "USE_MOCK_DATA": "true"
-  },
-  "functions": {
-    "src/index.ts": {
-      "maxDuration": 30
-    }
-  }
+      "dest": "/src/index.ts"
+    } 
+  ]
 }

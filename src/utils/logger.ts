@@ -39,7 +39,9 @@ const isServerlessEnvironment = (): boolean => {
     process.env.RENDER ||
     process.env.HEROKU_APP_NAME ||
     process.env.LAMBDA_RUNTIME_DIR ||
-    process.env.AWS_EXECUTION_ENV
+    process.env.AWS_EXECUTION_ENV ||
+    process.env.VERCEL_ENV ||
+    process.env.NOW_REGION
   );
 };
 
@@ -68,69 +70,69 @@ const consoleFormat = winston.format.combine(
   )
 );
 
-// Create transports array starting with console
+// Check environment first
+const serverless = isServerlessEnvironment();
+console.log(`Logger initialization: serverless=${serverless}, isDev=${env.isDevelopment}, nodeEnv=${env.nodeEnv}`);
+
+// Create transports array - always start with console
 const transports: winston.transport[] = [
   new winston.transports.Console({
     format: consoleFormat,
   }),
 ];
 
-// Check environment and add file logging only if safe
-const serverless = isServerlessEnvironment();
-console.log(`Logger initialization: serverless=${serverless}, isDev=${env.isDevelopment}`);
-
-if (!serverless && !env.isDevelopment) {
-  console.log('Attempting to enable file logging...');
+// Only add file logging in very specific conditions
+if (!serverless && env.nodeEnv === 'production') {
+  console.log('Attempting to enable file logging for production...');
   
   try {
-    // Dynamic import to avoid loading winston-daily-rotate-file in serverless
     const fs = require('fs');
     
-    // Check if we can write to the logs directory
+    // Test if we can create the directory
     if (!fs.existsSync(env.logsDir)) {
       fs.mkdirSync(env.logsDir, { recursive: true });
     }
     
-    // Test write permissions
-    const testFile = path.join(env.logsDir, 'test.log');
-    fs.writeFileSync(testFile, 'test');
+    // Test write permissions with a simple file
+    const testFile = path.join(env.logsDir, 'test-write.log');
+    fs.writeFileSync(testFile, 'test write permission');
     fs.unlinkSync(testFile);
     
-    // Only import DailyRotateFile if we're sure we can use it
+    // Only if all tests pass, try to load winston-daily-rotate-file
     const DailyRotateFile = require('winston-daily-rotate-file');
     
-    // Create a daily rotate file for all logs
-    const allFileTransport = new DailyRotateFile({
-      filename: path.join(env.logsDir, 'application-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d',
-      level: 'info',
-      format: logFormat,
-    });
-
-    // Create a daily rotate file for error logs
-    const errorFileTransport = new DailyRotateFile({
-      filename: path.join(env.logsDir, 'error-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d',
-      level: 'error',
-      format: logFormat,
-    });
-
-    transports.push(allFileTransport, errorFileTransport);
+    // Add file transports
+    transports.push(
+      new DailyRotateFile({
+        filename: path.join(env.logsDir, 'application-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d',
+        level: 'info',
+        format: logFormat,
+      }),
+      new DailyRotateFile({
+        filename: path.join(env.logsDir, 'error-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d',
+        level: 'error',
+        format: logFormat,
+      })
+    );
+    
     console.log('File logging enabled successfully');
   } catch (error) {
     console.warn('File logging disabled due to error:', error instanceof Error ? error.message : 'Unknown error');
+    // Continue with console-only logging
   }
 } else {
   if (serverless) {
     console.log('File logging disabled - serverless environment detected');
   } else {
-    console.log('File logging disabled - development mode');
+    console.log('File logging disabled - not in production mode');
   }
 }
 
