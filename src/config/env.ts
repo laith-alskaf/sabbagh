@@ -11,11 +11,13 @@ export const env = {
   isDevelopment: process.env.NODE_ENV === 'development',
   isTest: process.env.NODE_ENV === 'test',
   
-  // Use mock data when DATABASE_URL is not available or USE_MOCK_DATA is true
-  useMockData: process.env.USE_MOCK_DATA === 'true' || !process.env.DATABASE_URL,
-  
   database: {
-    url: process.env.DATABASE_URL,
+    url: process.env.DATABASE_URL || '',
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    name: process.env.DB_NAME || 'sabbagh_db',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
   },
   
   jwt: {

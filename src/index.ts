@@ -8,7 +8,7 @@ const PORT = env.port;
 const startServer = () => {
   const server = app.listen(PORT, () => {
     console.log(`Server running in ${env.nodeEnv} mode on port ${PORT}`);
-    console.log(`Using mock data: ${env.useMockData}`);
+    console.log(`Database connection: ${env.database.host}:${env.database.port}/${env.database.name}`);
   });
 
   // Handle unhandled promise rejections
@@ -31,25 +31,19 @@ const startServer = () => {
   return server;
 };
 
-// In serverless environments (like Vercel), we don't need to seed data
-// and we should start the server immediately
-if (env.useMockData || process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-  console.log('Serverless environment detected - starting server without database seeding');
-  startServer();
-} else {
-  // For local development with real database
-  console.log('Local environment detected - seeding default manager account');
-  seedDefaultManager()
-    .then(() => {
-      startServer();
-    })
-    .catch((error) => {
-      console.error('Failed to seed default manager account:', error);
-      // Still start the server even if seeding fails
-      console.log('Starting server anyway...');
-      startServer();
-    });
-}
+// Always try to seed default manager account first
+console.log('Seeding default manager account...');
+seedDefaultManager()
+  .then(() => {
+    console.log('Manager seeding completed, starting server...');
+    startServer();
+  })
+  .catch((error) => {
+    console.error('Failed to seed default manager account:', error);
+    // Still start the server even if seeding fails
+    console.log('Starting server anyway...');
+    startServer();
+  });
 
 // Export the app for serverless environments
 export default app;
