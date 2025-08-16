@@ -117,7 +117,7 @@ export async function createUser(userData: CreateUserInput): Promise<Omit<User, 
   const newUser = await userRepository.createUser({
     name: userData.name,
     email: userData.email,
-    password_hash,
+    password_hash:password_hash,
     role: userData.role,
     department: userData.department,
     phone: userData.phone,
