@@ -8,7 +8,7 @@ const PORT = env.port;
 const startServer = () => {
   const server = app.listen(PORT, () => {
     console.log(`Server running in ${env.nodeEnv} mode on port ${PORT}`);
-    console.log(`Database connection: ${env.database.host}:${env.database.port}/${env.database.name}`);
+    console.log(`Database URL: ${env.database.url ? 'Configured' : 'Not configured'}`);
   });
 
   // Handle unhandled promise rejections

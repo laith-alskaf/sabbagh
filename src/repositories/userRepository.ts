@@ -272,7 +272,7 @@ export async function getDepartments(): Promise<string[]> {
   const { rows } = await pool.query(
     'SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND active = true ORDER BY department'
   );
-  return rows.map(row => row.department);
+  return rows.map(row  => row.department);
 }
 
 /**
