@@ -83,7 +83,8 @@ export async function list(params: {
   }));
 }
 
-export async function getById(id: string, employeeLock?: { userId: string }): Promise<PurchaseOrderResponse | null> {
+export async function getById(id: string, employeeLock?: { userId: string }, client?: import('pg').PoolClient): Promise<PurchaseOrderResponse | null> {
+  const queryClient = client || pool;
   const vals: any[] = [id];
   let where = 'po.id = $1';
   if (employeeLock?.userId) { vals.push(employeeLock.userId); where += ` AND po.created_by = $2`; }
@@ -94,10 +95,10 @@ export async function getById(id: string, employeeLock?: { userId: string }): Pr
     LEFT JOIN vendors v ON v.id = po.supplier_id
     WHERE ${where}
   `;
-  const { rows } = await pool.query(sql, vals);
+  const { rows } = await queryClient.query(sql, vals);
   const po = rows[0];
   if (!po) return null;
-  const { rows: itemRows } = await pool.query(
+  const { rows: itemRows } = await queryClient.query(
     `SELECT * FROM purchase_order_items WHERE purchase_order_id = $1`,
     [po.id]
   );
@@ -151,7 +152,7 @@ export async function insert(po: Omit<PurchaseOrderResponse, 'id' | 'creator_nam
     await client.query(insertItemsSql, values);
   }
 
-  const full = await getById(inserted.id);
+  const full = await getById(inserted.id, undefined, client);
   if (!full) throw new Error('Failed to fetch inserted purchase order');
   return full;
 }

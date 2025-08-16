@@ -172,11 +172,6 @@ router.get('/my', purchaseOrderController.getMyPurchaseOrders);
  *                 maxLength: 1000
  *                 description: Additional notes (optional)
  *                 example: "Urgent request for new office equipment"
- *               supplier_id:
- *                 type: string
- *                 format: uuid
- *                 description: Supplier ID (optional)
- *                 example: "456e7890-e89b-12d3-a456-426614174001"
  *               currency:
  *                 type: string
  *                 enum: [SYP, USD]

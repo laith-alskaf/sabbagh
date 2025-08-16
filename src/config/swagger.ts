@@ -49,7 +49,7 @@ All endpoints return consistent error responses with appropriate HTTP status cod
     },
     servers: [
       {
-        url: 'https://sabbagh.vercel.app/api',
+        url: 'http://localhost:3000/api',
         description: 'Development server',
       },
       {
