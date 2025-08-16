@@ -1,0 +1,38 @@
+{
+  "general": {
+    "operationCompleted": "Operation completed successfully",
+    "saved": "Saved successfully",
+    "updated": "Updated successfully",
+    "deleted": "Deleted successfully",
+    "created": "Created successfully"
+  },
+  "user": {
+    "created": "User created successfully",
+    "updated": "User updated successfully",
+    "deleted": "User deleted successfully",
+    "passwordChanged": "Password changed successfully"
+  },
+  "vendor": {
+    "created": "Vendor created successfully",
+    "updated": "Vendor updated successfully",
+    "deleted": "Vendor deleted successfully"
+  },
+  "item": {
+    "created": "Item created successfully",
+    "updated": "Item updated successfully",
+    "deleted": "Item deleted successfully"
+  },
+  "changeRequest": {
+    "created": "Change request created successfully",
+    "approved": "Change request approved successfully",
+    "rejected": "Change request rejected successfully"
+  },
+  "purchaseOrder": {
+    "created": "Purchase order created successfully",
+    "updated": "Purchase order updated successfully",
+    "submitted": "Purchase order submitted successfully",
+    "approved": "Purchase order approved successfully",
+    "rejected": "Purchase order rejected successfully",
+    "completed": "Purchase order marked as completed successfully"
+  }
+}

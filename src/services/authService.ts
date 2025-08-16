@@ -2,8 +2,12 @@ import bcrypt from 'bcrypt';
 import jwt, { type Secret, type SignOptions } from 'jsonwebtoken';
 import { env } from '../config/env';
 import * as users from '../repositories/userRepository';
+import * as mockUserService from './mockUserService';
 import { AuthTokenPayload, LoginRequest, ChangePasswordRequest } from '../types/auth';
 import { User, UserRole } from '../types/models';
+
+// Determine which service to use
+const useMockData = env.useMockData || process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
 
 /**
  * Generate a JWT token for a user
@@ -50,8 +54,15 @@ export const comparePassword = async (
  * Login a user
  */
 export const login = async (loginData: LoginRequest) => {
-  // Find user by email
-  const user = await users.findByEmail(loginData.email);
+  let user: User | null;
+
+  if (useMockData) {
+    // Use mock data
+    user = await mockUserService.findUserByEmail(loginData.email);
+  } else {
+    // Use real database
+    user = await users.findByEmail(loginData.email);
+  }
 
   if (!user) {
     throw new Error('Invalid email or password');
@@ -78,6 +89,8 @@ export const login = async (loginData: LoginRequest) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      department: user.department,
+      phone: user.phone,
     },
   };
 };
@@ -86,8 +99,15 @@ export const login = async (loginData: LoginRequest) => {
  * Change user password
  */
 export const changePassword = async (userId: string, data: ChangePasswordRequest) => {
-  // Find user
-  const user = await users.findById(userId);
+  let user: User | null;
+
+  if (useMockData) {
+    // Use mock data
+    user = await mockUserService.findUserById(userId);
+  } else {
+    // Use real database
+    user = await users.findById(userId);
+  }
 
   if (!user) {
     throw new Error('User not found');
@@ -102,8 +122,13 @@ export const changePassword = async (userId: string, data: ChangePasswordRequest
   // Hash new password
   const hashedPassword = await hashPassword(data.newPassword);
 
-  // Update password
-  await users.updatePassword(userId, hashedPassword);
+  if (useMockData) {
+    // Use mock data
+    await mockUserService.changeUserPassword(userId, data.newPassword);
+  } else {
+    // Use real database
+    await users.updatePassword(userId, hashedPassword);
+  }
 
   return { success: true, message: 'Password changed successfully' };
 };
@@ -113,7 +138,7 @@ export const changePassword = async (userId: string, data: ChangePasswordRequest
  */
 export const seedDefaultManager = async (): Promise<void> => {
   // Skip seeding if using mock data
-  if (env.useMockData) {
+  if (useMockData) {
     console.log('Using mock data - skipping default manager seeding');
     return;
   }

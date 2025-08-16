@@ -61,5 +61,16 @@
     "notInProgress": "Only in-progress purchase orders can be marked as completed",
     "alreadySubmitted": "This purchase order has already been submitted",
     "notYourOrder": "You do not have permission to access this purchase order"
+  },
+  "user": {
+    "notFound": "User not found",
+    "emailExists": "Email address already exists",
+    "cannotDeleteSelf": "You cannot delete your own account",
+    "cannotDeleteManager": "Cannot delete manager accounts",
+    "insufficientPermissions": "You do not have permission to perform this action",
+    "cannotAssignRole": "You do not have permission to assign this role",
+    "createFailed": "Failed to create user",
+    "updateFailed": "Failed to update user",
+    "deleteFailed": "Failed to delete user"
   }
 }

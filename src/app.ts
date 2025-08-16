@@ -17,12 +17,7 @@ const app = express();
 // Apply middlewares
 app.use(helmet()); // Security headers
 // Enable CORS with proper configuration
-app.use(cors({
-  origin: true, // Allow all origins in development
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language'],
-}));
+app.use(cors());
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
@@ -51,23 +46,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Swagger documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
-  explorer: true,
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Sabbagh API Documentation',
-  swaggerOptions: {
-    persistAuthorization: true,
-    displayRequestDuration: true,
-    filter: true,
-    showExtensions: true,
-    showCommonExtensions: true,
-    requestInterceptor: (req: any) => {
-      // Ensure proper headers
-      req.headers['Content-Type'] = 'application/json';
-      return req;
-    }
-  }
-}));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // API routes
 app.use('/api', routes);

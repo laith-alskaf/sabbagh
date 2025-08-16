@@ -2,93 +2,61 @@ import { Request, Response } from 'express';
 import { AppError, asyncHandler } from '../middlewares/errorMiddleware';
 import { t } from '../utils/i18n';
 import { logInfo, logError } from '../utils/logger';
-import bcrypt from 'bcrypt';
-
-// Mock user data for now - replace with actual database operations
-const mockUsers: any[] = [
-  {
-    id: '123e4567-e89b-12d3-a456-426614174000',
-    name: 'Ahmad Al-Sabbagh',
-    email: 'ahmad@sabbagh.com',
-    password: '$2b$12$hashedpassword1', // Mock hashed password
-    role: 'manager',
-    department: 'Management',
-    phone: '+963-11-1234567',
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '456e7890-e89b-12d3-a456-426614174001',
-    name: 'Sara Al-Ahmad',
-    email: 'sara@sabbagh.com',
-    password: '$2b$12$hashedpassword2', // Mock hashed password
-    role: 'assistant_manager',
-    department: 'IT Department',
-    phone: '+963-11-1234568',
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+import * as userService from '../services/userService';
+import { UserRole } from '../types/models';
 
 /**
  * Get all users with pagination and filtering
  */
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
-  const { page = 1, limit = 10, search, role, department, is_active, sort = 'created_at', order = 'desc' } = (req as any).validatedQuery || req.query;
+  const { 
+    page = 1, 
+    limit = 10, 
+    search, 
+    role, 
+    department, 
+    is_active, 
+    sort = 'created_at', 
+    order = 'desc' 
+  } = (req as any).validatedQuery || req.query;
 
   logInfo('Getting users list', {
     requestId: req.requestId,
     userId: req.user?.userId,
     filters: { search, role, department, is_active, sort, order },
-    pagination: { page, limit },
+    pagination: { page: Number(page), limit: Number(limit) },
   });
 
-  // Mock filtering logic - replace with actual database query
-  let filteredUsers = [...mockUsers];
+  try {
+    const filters = {
+      search,
+      role: role as UserRole,
+      department,
+      is_active: is_active !== undefined ? Boolean(is_active) : undefined,
+    };
 
-  if (search) {
-    filteredUsers = filteredUsers.filter(user => 
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase())
-    );
+    const pagination = {
+      page: Number(page),
+      limit: Number(limit),
+      sort,
+      order: order as 'asc' | 'desc',
+    };
+
+    const result = await userService.getUsers(filters, pagination);
+
+    res.json({
+      success: true,
+      data: result.users,
+      pagination: result.pagination,
+    });
+  } catch (error) {
+    logError(error as Error, {
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      action: 'getUsers',
+    });
+    throw error;
   }
-
-  if (role) {
-    filteredUsers = filteredUsers.filter(user => user.role === role);
-  }
-
-  if (department) {
-    filteredUsers = filteredUsers.filter(user => user.department === department);
-  }
-
-  if (is_active !== undefined) {
-    filteredUsers = filteredUsers.filter(user => user.is_active === is_active);
-  }
-
-  // Mock pagination
-  const total = filteredUsers.length;
-  const totalPages = Math.ceil(total / limit);
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
-  // Remove password from response
-  const usersWithoutPassword = paginatedUsers.map(({ ...user }) => user);
-
-  res.json({
-    success: true,
-    data: usersWithoutPassword,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
-    },
-  });
 });
 
 /**
@@ -103,19 +71,26 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
     targetUserId: id,
   });
 
-  const user = mockUsers.find(u => u.id === id);
+  try {
+    const user = await userService.getUserById(id);
 
-  if (!user) {
-    throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
+    if (!user) {
+      throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
+    }
+
+    res.json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    logError(error as Error, {
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      targetUserId: id,
+      action: 'getUserById',
+    });
+    throw error;
   }
-
-  // Remove password from response
-  const { ...userWithoutPassword } = user;
-
-  res.json({
-    success: true,
-    data: userWithoutPassword,
-  });
 });
 
 /**
@@ -131,34 +106,36 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     newUserRole: userData.role,
   });
 
-  // Check if email already exists
-  const existingUser = mockUsers.find(u => u.email === userData.email);
-  if (existingUser) {
-    throw new AppError(t(req, 'user.emailExists', { ns: 'errors' }), 409);
+  try {
+    // Check permissions
+    const currentUserRole = req.user?.role as UserRole;
+    if (!userService.canCreateUserWithRole(currentUserRole, userData.role)) {
+      throw new AppError(t(req, 'user.insufficientPermissions', { ns: 'errors' }), 403);
+    }
+
+    const newUser = await userService.createUser({
+      name: userData.name,
+      email: userData.email,
+      password: userData.password,
+      role: userData.role,
+      department: userData.department,
+      phone: userData.phone,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: t(req, 'user.created', { ns: 'success' }),
+      data: newUser,
+    });
+  } catch (error) {
+    logError(error as Error, {
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      newUserEmail: userData.email,
+      action: 'createUser',
+    });
+    throw error;
   }
-
-  // Hash password
-  const hashedPassword = await bcrypt.hash(userData.password, 12);
-
-  // Create new user (mock implementation)
-  const newUser = {
-    id: `user-${Date.now()}`,
-    ...userData,
-    password: hashedPassword,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  mockUsers.push(newUser);
-
-  // Remove password from response
-  const { password, ...userWithoutPassword } = newUser;
-
-  res.status(201).json({
-    success: true,
-    message: t(req, 'user.created', { ns: 'success' }),
-    data: userWithoutPassword,
-  });
 });
 
 /**
@@ -175,35 +152,51 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     updateFields: Object.keys(updateData),
   });
 
-  const userIndex = mockUsers.findIndex(u => u.id === id);
-
-  if (userIndex === -1) {
-    throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
-  }
-
-  // Check if email already exists (if email is being updated)
-  if (updateData.email && updateData.email !== mockUsers[userIndex].email) {
-    const existingUser = mockUsers.find(u => u.email === updateData.email && u.id !== id);
-    if (existingUser) {
-      throw new AppError(t(req, 'user.emailExists', { ns: 'errors' }), 409);
+  try {
+    // Get target user to check permissions
+    const targetUser = await userService.getUserById(id);
+    if (!targetUser) {
+      throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
     }
+
+    // Check permissions
+    const currentUserRole = req.user?.role as UserRole;
+    if (!userService.canManageUser(currentUserRole, targetUser.role as UserRole)) {
+      throw new AppError(t(req, 'user.insufficientPermissions', { ns: 'errors' }), 403);
+    }
+
+    // If role is being changed, check if current user can assign the new role
+    if (updateData.role && !userService.canCreateUserWithRole(currentUserRole, updateData.role)) {
+      throw new AppError(t(req, 'user.cannotAssignRole', { ns: 'errors' }), 403);
+    }
+
+    const updatedUser = await userService.updateUser(id, {
+      name: updateData.name,
+      email: updateData.email,
+      role: updateData.role,
+      department: updateData.department,
+      phone: updateData.phone,
+      is_active: updateData.is_active,
+    });
+
+    if (!updatedUser) {
+      throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
+    }
+
+    res.json({
+      success: true,
+      message: t(req, 'user.updated', { ns: 'success' }),
+      data: updatedUser,
+    });
+  } catch (error) {
+    logError(error as Error, {
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      targetUserId: id,
+      action: 'updateUser',
+    });
+    throw error;
   }
-
-  // Update user (mock implementation)
-  mockUsers[userIndex] = {
-    ...mockUsers[userIndex],
-    ...updateData,
-    updated_at: new Date().toISOString(),
-  };
-
-  // Remove password from response
-  const { password, ...userWithoutPassword } = mockUsers[userIndex];
-
-  res.json({
-    success: true,
-    message: t(req, 'user.updated', { ns: 'success' }),
-    data: userWithoutPassword,
-  });
 });
 
 /**
@@ -218,32 +211,38 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
     targetUserId: id,
   });
 
-  const userIndex = mockUsers.findIndex(u => u.id === id);
+  try {
+    // Get target user to check permissions
+    const targetUser = await userService.getUserById(id);
+    if (!targetUser) {
+      throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
+    }
 
-  if (userIndex === -1) {
-    throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
+    // Check permissions
+    const currentUserRole = req.user?.role as UserRole;
+    if (!userService.canManageUser(currentUserRole, targetUser.role as UserRole)) {
+      throw new AppError(t(req, 'user.insufficientPermissions', { ns: 'errors' }), 403);
+    }
+
+    const deleted = await userService.deleteUser(id, req.user?.userId!);
+
+    if (!deleted) {
+      throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
+    }
+
+    res.json({
+      success: true,
+      message: t(req, 'user.deleted', { ns: 'success' }),
+    });
+  } catch (error) {
+    logError(error as Error, {
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      targetUserId: id,
+      action: 'deleteUser',
+    });
+    throw error;
   }
-
-  const targetUser = mockUsers[userIndex];
-
-  // Prevent deleting yourself
-  if (targetUser.id === req.user?.userId) {
-    throw new AppError(t(req, 'user.cannotDeleteSelf', { ns: 'errors' }), 409);
-  }
-
-  // Prevent deleting other managers (business rule)
-  if (targetUser.role === 'manager') {
-    throw new AppError(t(req, 'user.cannotDeleteManager', { ns: 'errors' }), 409);
-  }
-
-  // Soft delete (mock implementation)
-  mockUsers[userIndex].is_active = false;
-  mockUsers[userIndex].updated_at = new Date().toISOString();
-
-  res.json({
-    success: true,
-    message: t(req, 'user.deleted', { ns: 'success' }),
-  });
 });
 
 /**
@@ -259,24 +258,62 @@ export const adminChangePassword = asyncHandler(async (req: Request, res: Respon
     targetUserId: id,
   });
 
-  const userIndex = mockUsers.findIndex(u => u.id === id);
+  try {
+    // Get target user to check permissions
+    const targetUser = await userService.getUserById(id);
+    if (!targetUser) {
+      throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
+    }
 
-  if (userIndex === -1) {
-    throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
+    // Check permissions
+    const currentUserRole = req.user?.role as UserRole;
+    if (!userService.canManageUser(currentUserRole, targetUser.role as UserRole)) {
+      throw new AppError(t(req, 'user.insufficientPermissions', { ns: 'errors' }), 403);
+    }
+
+    const success = await userService.changeUserPassword(id, new_password);
+
+    if (!success) {
+      throw new AppError(t(req, 'user.notFound', { ns: 'errors' }), 404);
+    }
+
+    res.json({
+      success: true,
+      message: t(req, 'user.passwordChanged', { ns: 'success' }),
+    });
+  } catch (error) {
+    logError(error as Error, {
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      targetUserId: id,
+      action: 'adminChangePassword',
+    });
+    throw error;
   }
+});
 
-  // Hash new password
-  const hashedPassword = await bcrypt.hash(new_password, 12);
-
-  // Update password (mock implementation)
-  mockUsers[userIndex] = {
-    ...mockUsers[userIndex],
-    password: hashedPassword,
-    updated_at: new Date().toISOString(),
-  };
-
-  res.json({
-    success: true,
-    message: t(req, 'user.passwordChanged', { ns: 'success' }),
+/**
+ * Get all departments
+ */
+export const getDepartments = asyncHandler(async (req: Request, res: Response) => {
+  logInfo('Getting departments list', {
+    requestId: req.requestId,
+    userId: req.user?.userId,
   });
+
+  try {
+    const departments = await userService.getDepartments();
+
+    res.json({
+      success: true,
+      data: departments,
+    });
+  } catch (error) {
+    logError(error as Error, {
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      action: 'getDepartments',
+    });
+    throw error;
+  }
 });

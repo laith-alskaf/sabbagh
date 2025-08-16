@@ -61,5 +61,16 @@
     "notInProgress": "يمكن تحديد طلبات الشراء كمكتملة فقط إذا كانت قيد التنفيذ",
     "alreadySubmitted": "تم تقديم طلب الشراء هذا بالفعل",
     "notYourOrder": "ليس لديك إذن للوصول إلى طلب الشراء هذا"
+  },
+  "user": {
+    "notFound": "المستخدم غير موجود",
+    "emailExists": "عنوان البريد الإلكتروني موجود بالفعل",
+    "cannotDeleteSelf": "لا يمكنك حذف حسابك الخاص",
+    "cannotDeleteManager": "لا يمكن حذف حسابات المديرين",
+    "insufficientPermissions": "ليس لديك إذن لتنفيذ هذا الإجراء",
+    "cannotAssignRole": "ليس لديك إذن لتعيين هذا الدور",
+    "createFailed": "فشل إنشاء المستخدم",
+    "updateFailed": "فشل تحديث المستخدم",
+    "deleteFailed": "فشل حذف المستخدم"
   }
 }
