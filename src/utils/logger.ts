@@ -64,13 +64,27 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Add file transports in production (only if not in serverless environment)
-if (!env.isDevelopment && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.LAMBDA_TASK_ROOT) {
+// Check if we're in a serverless environment
+const isServerless = !!(
+  process.env.VERCEL || 
+  process.env.AWS_LAMBDA_FUNCTION_NAME || 
+  process.env.LAMBDA_TASK_ROOT ||
+  process.env.NETLIFY ||
+  process.env.RAILWAY_ENVIRONMENT
+);
+
+// Add file transports only in non-serverless production environments
+if (!env.isDevelopment && !isServerless) {
   try {
     // Check if we can write to the logs directory
     if (!fs.existsSync(env.logsDir)) {
       fs.mkdirSync(env.logsDir, { recursive: true });
     }
+    
+    // Test write permissions
+    const testFile = path.join(env.logsDir, 'test.log');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
     
     // Create a daily rotate file for all logs
     const allFileTransport = new winston.transports.DailyRotateFile({
@@ -99,7 +113,11 @@ if (!env.isDevelopment && !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTIO
     console.warn('File logging disabled due to read-only filesystem:', error);
   }
 } else {
-  console.log('File logging disabled - running in serverless environment');
+  if (isServerless) {
+    console.log('File logging disabled - running in serverless environment');
+  } else {
+    console.log('File logging disabled - development mode');
+  }
 }
 
 // Create the logger
