@@ -1,174 +1,38 @@
-import winston from 'winston';
-import 'winston-daily-rotate-file';
-import path from 'path';
-import fs from 'fs';
-import { env } from '../config/env';
+// Smart logger that chooses the right implementation based on environment
 
-// Define log levels
-const levels = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  http: 3,
-  debug: 4,
+// Function to detect serverless environment
+const isServerlessEnvironment = (): boolean => {
+  return !!(
+    process.env.VERCEL || 
+    process.env.AWS_LAMBDA_FUNCTION_NAME || 
+    process.env.LAMBDA_TASK_ROOT ||
+    process.env.NETLIFY ||
+    process.env.RAILWAY_ENVIRONMENT ||
+    process.env.RENDER ||
+    process.env.HEROKU_APP_NAME
+  );
 };
 
-// Define log level based on environment
-const level = () => {
-  return env.isDevelopment ? 'debug' : 'info';
-};
+// Import both loggers
+import * as serverlessLogger from './serverless-logger';
+import * as fullLogger from './full-logger';
 
-// Define colors for each level
-const colors = {
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
-  debug: 'blue',
-};
+// Choose the appropriate logger implementation
+const useServerless = isServerlessEnvironment();
 
-// Add colors to winston
-winston.addColors(colors);
-
-// Define the format for logs
-const format = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  winston.format.errors({ stack: true }),
-  winston.format.json(),
-  winston.format.printf((info) => {
-    const { timestamp, level, message, ...meta } = info;
-    let logMessage = `${timestamp} [${level.toUpperCase()}]: ${message}`;
-    
-    if (Object.keys(meta).length > 0) {
-      logMessage += ` | Meta: ${JSON.stringify(meta)}`;
-    }
-    
-    return logMessage;
-  })
-);
-
-// Define the format for console logs
-const consoleFormat = winston.format.combine(
-  winston.format.colorize({ all: true }),
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`
-  )
-);
-
-// Define transports
-const transports: winston.transport[] = [
-  // Console transport
-  new winston.transports.Console({
-    format: consoleFormat,
-  }),
-];
-
-// Check if we're in a serverless environment
-const isServerless = !!(
-  process.env.VERCEL || 
-  process.env.AWS_LAMBDA_FUNCTION_NAME || 
-  process.env.LAMBDA_TASK_ROOT ||
-  process.env.NETLIFY ||
-  process.env.RAILWAY_ENVIRONMENT
-);
-
-// Add file transports only in non-serverless production environments
-if (!env.isDevelopment && !isServerless) {
-  try {
-    // Check if we can write to the logs directory
-    if (!fs.existsSync(env.logsDir)) {
-      fs.mkdirSync(env.logsDir, { recursive: true });
-    }
-    
-    // Test write permissions
-    const testFile = path.join(env.logsDir, 'test.log');
-    fs.writeFileSync(testFile, 'test');
-    fs.unlinkSync(testFile);
-    
-    // Create a daily rotate file for all logs
-    const allFileTransport = new winston.transports.DailyRotateFile({
-      filename: path.join(env.logsDir, 'application-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d',
-      level: 'info',
-    });
-
-    // Create a daily rotate file for error logs
-    const errorFileTransport = new winston.transports.DailyRotateFile({
-      filename: path.join(env.logsDir, 'error-%DATE%.log'),
-      datePattern: 'YYYY-MM-DD',
-      zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d',
-      level: 'error',
-    });
-
-    transports.push(allFileTransport, errorFileTransport);
-    console.log('File logging enabled');
-  } catch (error) {
-    // If file logging fails (e.g., in serverless environments), just use console
-    console.warn('File logging disabled due to read-only filesystem:', error);
-  }
+if (useServerless) {
+  console.log('Using serverless logger (console only)');
 } else {
-  if (isServerless) {
-    console.log('File logging disabled - running in serverless environment');
-  } else {
-    console.log('File logging disabled - development mode');
-  }
+  console.log('Using full logger (with file support)');
 }
 
-// Create the logger
-const logger = winston.createLogger({
-  level: level(),
-  levels,
-  format,
-  transports,
-});
-
-// Add helper methods for structured logging
-export const logWithContext = (level: string, message: string, context: any = {}) => {
-  logger.log(level, message, context);
-};
-
-export const logRequest = (method: string, url: string, statusCode: number, duration: number, requestId?: string) => {
-  logger.info('HTTP Request', {
-    method,
-    url,
-    statusCode,
-    duration,
-    requestId,
-  });
-};
-
-export const logError = (error: Error, context: any = {}) => {
-  logger.error('Application Error', {
-    message: error.message,
-    stack: error.stack,
-    ...context,
-  });
-};
-
-export const logAuth = (action: string, userId: string, success: boolean, ip?: string) => {
-  logger.info('Authentication Event', {
-    action,
-    userId,
-    success,
-    ip,
-  });
-};
-
-export const logBusinessEvent = (event: string, data: any = {}) => {
-  logger.info('Business Event', {
-    event,
-    ...data,
-  });
-};
-
-export const logInfo = (message: string, context: any = {}) => {
-  logger.info(message, context);
-};
+// Export the appropriate logger
+const logger = useServerless ? serverlessLogger.default : fullLogger.default;
+export const logWithContext = useServerless ? serverlessLogger.logWithContext : fullLogger.logWithContext;
+export const logRequest = useServerless ? serverlessLogger.logRequest : fullLogger.logRequest;
+export const logError = useServerless ? serverlessLogger.logError : fullLogger.logError;
+export const logAuth = useServerless ? serverlessLogger.logAuth : fullLogger.logAuth;
+export const logBusinessEvent = useServerless ? serverlessLogger.logBusinessEvent : fullLogger.logBusinessEvent;
+export const logInfo = useServerless ? serverlessLogger.logInfo : fullLogger.logInfo;
 
 export default logger;
