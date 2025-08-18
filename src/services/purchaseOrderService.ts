@@ -278,11 +278,13 @@ export const updatePurchaseOrder = async (
     throw new AppError('You do not have permission to update this purchase order', 403);
   }
 
-  // Only draft purchase orders can be updated
-  if (purchaseOrder.status !== PurchaseOrderStatus.DRAFT) {
-    throw new AppError('Only draft purchase orders can be updated', 400);
-  }
-
+  // Only draft and IN_PROGRESS purchase orders can be updated
+ if (
+    purchaseOrder.status !== PurchaseOrderStatus.DRAFT &&
+    purchaseOrder.status !== PurchaseOrderStatus.IN_PROGRESS
+) {
+    throw new AppError('يُسمح بالتحديث فقط إذا كانت الحالة DRAFT أو IN_PROGRESS', 400);
+}
   // Update the purchase order with items in a transaction
   const updatedPurchaseOrder = await withTx(async (client) => {
     const updated = await (await import('../repositories/purchaseOrderMutations')).updateDraft(

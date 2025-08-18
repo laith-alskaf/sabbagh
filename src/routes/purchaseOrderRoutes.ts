@@ -249,7 +249,7 @@ router.post('/', validate(createPurchaseOrderSchema), purchaseOrderController.cr
  * @swagger
  * /purchase-orders/{id}:
  *   put:
- *     summary: Update a purchase order (only in draft status)
+ *     summary: Update a purchase order (only in draft or In Progress status)
  *     tags: [Purchase Orders]
  *     security:
  *       - bearerAuth: []
@@ -357,7 +357,7 @@ router.post('/', validate(createPurchaseOrderSchema), purchaseOrderController.cr
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  *       403:
- *         description: Cannot update purchase order (not in draft status or not owner)
+ *         description: Cannot update purchase order (not in draft or In Progress status or not owner)
  *         content:
  *           application/json:
  *             schema:
@@ -368,7 +368,7 @@ router.post('/', validate(createPurchaseOrderSchema), purchaseOrderController.cr
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "Cannot update purchase order that is not in draft status"
+ *                   example: "Cannot update purchase order that is not in draft or In Progress status"
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
  *       500:
@@ -973,7 +973,7 @@ router.patch(
  */
 router.patch(
   '/:id/complete',
-  authorizeRoles([UserRole.MANAGER]),
+  authorizeRoles([UserRole.MANAGER,UserRole.ASSISTANT_MANAGER]),
   validateParams(purchaseOrderIdSchema),
   validate(completePurchaseOrderSchema),
   purchaseOrderController.completePurchaseOrder
