@@ -208,7 +208,7 @@ export const createPurchaseOrder = async (
   const purchaseOrder = await withTx(async (client) => {
     const inserted = await poRepo.insert(
       {
-        id: '', // ignored
+        // id: '', // ignored
         number,
         request_date: data.request_date,
         department: data.department,
@@ -232,7 +232,7 @@ export const createPurchaseOrder = async (
         quantity: item.quantity,
         unit: item.unit,
         received_quantity: item.received_quantity ?? null,
-        price: item.price ?? '',
+        price: item.price ?? null,
         line_total: item.line_total ?? null,
         currency: item.currency ?? null,
       })) as any,
