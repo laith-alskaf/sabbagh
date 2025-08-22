@@ -17,7 +17,7 @@ export interface CreatePurchaseOrderRequest {
 export interface CreatePurchaseOrderItemRequest {
   item_id?: string;
   item_code?: string;
-  item_name?: string;
+  item_name: string;
   quantity: number;
   unit: string;
   received_quantity?: number;
