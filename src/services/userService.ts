@@ -10,6 +10,7 @@ export interface CreateUserInput {
   role: UserRole;
   department?: string;
   phone?: string;
+  is_active?: boolean;
 }
 
 export interface UpdateUserInput {
@@ -117,10 +118,11 @@ export async function createUser(userData: CreateUserInput): Promise<Omit<User, 
   const newUser = await userRepository.createUser({
     name: userData.name,
     email: userData.email,
-    password_hash:password_hash,
+    password_hash: password_hash,
     role: userData.role,
     department: userData.department,
     phone: userData.phone,
+    active: userData.is_active ?? true,
   });
 
   // Remove password_hash from response

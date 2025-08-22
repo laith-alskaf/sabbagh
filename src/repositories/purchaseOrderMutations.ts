@@ -12,7 +12,7 @@ export async function updateStatus(
   const values: any[] = [status, id];
   let setNotes = '';
   if (extra?.notesAppend) {
-    setNotes = ', notes = COALESCE(notes, \'\') || CASE WHEN notes IS NULL OR notes = \'\' THEN $3 ELSE E"\n\n" || $3 END';
+    setNotes = ', notes = COALESCE(notes, \'\') || CASE WHEN notes IS NULL OR notes = \'\' THEN $3 ELSE E\'\\n\\n\' || $3 END';
     values.push(extra.notesAppend);
   }
   const sql = `

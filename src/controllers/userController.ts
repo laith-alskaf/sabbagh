@@ -120,6 +120,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
       role: userData.role,
       department: userData.department,
       phone: userData.phone,
+      is_active: userData.is_active,
     });
 
     res.status(201).json({

@@ -497,7 +497,7 @@ export const managerReject = async (
   const purchaseOrder = await poRepo.getById(id);
   if (!purchaseOrder) throw new Error('Purchase order not found');
   if (purchaseOrder.status !== PurchaseOrderStatus.UNDER_MANAGER_REVIEW) {
-    throw new AppError('Only purchase orders under manager review can be rejected', 400);
+    throw new AppError('purchaseOrder.notUnderManagerReview', 400);
   }
 
   const updatedPurchaseOrder = await withTx(async (client) => {

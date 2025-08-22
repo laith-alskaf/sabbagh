@@ -613,3 +613,51 @@ export const generatePurchaseOrderListExcel = async (
   
   return workbook;
 };
+
+/**
+ * Get vendor report data
+ * @param filters Filters for the report
+ * @param pagination Pagination options
+ */
+export const getVendorReport = async (
+  filters: { status?: string; include_performance?: boolean },
+  pagination?: PaginationOptions
+) => {
+  const offset = pagination ? (pagination.page - 1) * pagination.limit : undefined;
+  const limit = pagination ? pagination.limit : undefined;
+  const { vendors, totalCount } = await repo.getVendorReportData(filters, offset, limit);
+
+  return {
+    data: vendors,
+    pagination: pagination ? {
+      page: pagination.page,
+      limit: pagination.limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / pagination.limit)
+    } : undefined
+  };
+};
+
+/**
+ * Get item report data
+ * @param filters Filters for the report
+ * @param pagination Pagination options
+ */
+export const getItemReport = async (
+  filters: { status?: string; include_usage?: boolean },
+  pagination?: PaginationOptions
+) => {
+  const offset = pagination ? (pagination.page - 1) * pagination.limit : undefined;
+  const limit = pagination ? pagination.limit : undefined;
+  const { items, totalCount } = await repo.getItemReportData(filters, offset, limit);
+
+  return {
+    data: items,
+    pagination: pagination ? {
+      page: pagination.page,
+      limit: pagination.limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / pagination.limit)
+    } : undefined
+  };
+};
