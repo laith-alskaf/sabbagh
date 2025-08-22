@@ -11,7 +11,7 @@ const purchaseOrderItemSchema = z.object({
   received_quantity: z.number().nullable().optional(),
   price: z.number().nonnegative({ message: 'Price must be a non-negative number' }).nullable().optional(),
   line_total: z.number().nonnegative().nullable().optional(),
-  currency: z.enum(['SYP', 'USD'], { message: 'Currency must be SYP or USD' }),
+  currency: z.enum(['SYP', 'USD'], { message: 'Currency must be SYP or USD' }).optional(),
 });
 
 // Create purchase order schema
