@@ -12,10 +12,10 @@ const generatePurchaseOrderNumber = async (): Promise<string> => {
   const date = new Date();
   const year = date.getFullYear().toString().slice(-2);
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  
+
   // Get the count of purchase orders for this month
   const count = await poRepo.countForMonth(date.getFullYear(), date.getMonth());
-  
+
   // Generate the number in format: PO-YY-MM-XXXX
   const sequence = (count + 1).toString().padStart(4, '0');
   return `PO-${year}-${month}-${sequence}`;
@@ -192,7 +192,7 @@ export const createPurchaseOrder = async (
 
   // Determine the initial status based on user role
   let initialStatus: PurchaseOrderStatus;
-  
+
   if (userRole === UserRole.MANAGER) {
     // Managers can create purchase orders directly in progress
     initialStatus = PurchaseOrderStatus.IN_PROGRESS;
@@ -215,26 +215,26 @@ export const createPurchaseOrder = async (
         request_type: data.request_type,
         requester_name: data.requester_name,
         status: initialStatus,
-        notes: data.notes ?? null,
-        supplier_id: data.supplier_id ?? null,
-        execution_date: data.execution_date ?? null,
-        attachment_url: data.attachment_url ?? null,
-        total_amount: data.total_amount ?? null,
-        currency: data.currency??'',
+        notes: data.notes ?? '',
+        supplier_id: data.supplier_id ?? '',
+        execution_date: data.execution_date ?? '',
+        attachment_url: data.attachment_url ?? '',
+        total_amount: data.total_amount ?? '',
+        currency: data.currency ?? '',
         created_by: userId,
       } as any,
       data.items.map((item) => ({
         id: '', // ignored
         purchase_order_id: '', // set in repo
-        item_id: item.item_id ?? null,
-        item_code: item.item_code ?? null,
-        item_name: item.item_name ?? null,
+        item_id: item.item_id ?? '',
+        item_code: item.item_code ?? '',
+        item_name: item.item_name,
         quantity: item.quantity,
         unit: item.unit,
-        received_quantity: item.received_quantity ?? null,
-        price: item.price ?? null,
-        line_total: item.line_total ?? null,
-        currency: item.currency??'',
+        received_quantity: item.received_quantity ?? '',
+        price: item.price ?? '',
+        line_total: item.line_total ?? '',
+        currency: item.currency ?? '',
       })) as any,
       client
     );
@@ -279,12 +279,12 @@ export const updatePurchaseOrder = async (
   }
 
   // Only draft and IN_PROGRESS purchase orders can be updated
- if (
+  if (
     purchaseOrder.status !== PurchaseOrderStatus.DRAFT &&
     purchaseOrder.status !== PurchaseOrderStatus.IN_PROGRESS
-) {
+  ) {
     throw new AppError('يُسمح بالتحديث فقط إذا كانت الحالة DRAFT أو IN_PROGRESS', 400);
-}
+  }
   // Update the purchase order with items in a transaction
   const updatedPurchaseOrder = await withTx(async (client) => {
     const updated = await (await import('../repositories/purchaseOrderMutations')).updateDraft(
