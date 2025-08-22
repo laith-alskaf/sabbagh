@@ -216,25 +216,25 @@ export const createPurchaseOrder = async (
         requester_name: data.requester_name,
         status: initialStatus,
         notes: data.notes ?? '',
-        supplier_id: data.supplier_id ?? '',
-        execution_date: data.execution_date ?? '',
-        attachment_url: data.attachment_url ?? '',
-        total_amount: data.total_amount ?? '',
-        currency: data.currency ?? '',
+        supplier_id: data.supplier_id ?? null,
+        execution_date: data.execution_date ?? null,
+        attachment_url: data.attachment_url ?? null,
+        total_amount: data.total_amount ?? null,
+        currency: data.currency ?? null,
         created_by: userId,
       } as any,
       data.items.map((item) => ({
         id: '', // ignored
-        purchase_order_id: '', // set in repo
-        item_id: item.item_id ?? '',
-        item_code: item.item_code ?? '',
+        purchase_order_id: null, // set in repo
+        item_id: item.item_id ?? null,
+        item_code: item.item_code ?? null,
         item_name: item.item_name,
         quantity: item.quantity,
         unit: item.unit,
-        received_quantity: item.received_quantity ?? '',
+        received_quantity: item.received_quantity ?? null,
         price: item.price ?? '',
-        line_total: item.line_total ?? '',
-        currency: item.currency ?? '',
+        line_total: item.line_total ?? null,
+        currency: item.currency ?? null,
       })) as any,
       client
     );
