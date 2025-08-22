@@ -220,7 +220,7 @@ export const createPurchaseOrder = async (
         execution_date: data.execution_date ?? null,
         attachment_url: data.attachment_url ?? null,
         total_amount: data.total_amount ?? null,
-        currency: data.currency,
+        currency: data.currency??'',
         created_by: userId,
       } as any,
       data.items.map((item) => ({
@@ -234,7 +234,7 @@ export const createPurchaseOrder = async (
         received_quantity: item.received_quantity ?? null,
         price: item.price ?? null,
         line_total: item.line_total ?? null,
-        currency: item.currency,
+        currency: item.currency??'',
       })) as any,
       client
     );

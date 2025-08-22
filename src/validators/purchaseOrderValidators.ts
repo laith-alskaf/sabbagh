@@ -5,7 +5,7 @@ const purchaseOrderItemSchema = z.object({
   id: z.string().optional(),
   item_id: z.string().nullable().optional(),
   item_code: z.string().nullable().optional(),
-  item_name: z.string().nullable().optional(),
+  item_name: z.string(({ message: 'Item Name is required' })),
   quantity: z.number().positive({ message: 'Quantity must be a positive number' }),
   unit: z.string().min(1, { message: 'Unit is required' }),
   received_quantity: z.number().nullable().optional(),
