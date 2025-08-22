@@ -10,7 +10,7 @@ export interface CreatePurchaseOrderRequest {
   execution_date?: Date;
   attachment_url?: string;
   total_amount?: number;
-  currency: Currency;
+  currency?: Currency;
   items: CreatePurchaseOrderItemRequest[];
 }
 
@@ -23,7 +23,7 @@ export interface CreatePurchaseOrderItemRequest {
   received_quantity?: number;
   price?: number;
   line_total?: number;
-  currency: Currency;
+  currency?: Currency;
 }
 
 export interface UpdatePurchaseOrderRequest {
