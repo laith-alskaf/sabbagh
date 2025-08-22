@@ -9,7 +9,6 @@ export const createItemSchema = z.object({
   code: z.string()
     .min(2, 'Item code must be at least 2 characters')
     .max(50, 'Item code must not exceed 50 characters')
-    .regex(/^[A-Z0-9\-_]+$/, 'Item code must contain only uppercase letters, numbers, hyphens, and underscores')
     .trim(),
   description: z.string()
     .max(500, 'Description must not exceed 500 characters')
