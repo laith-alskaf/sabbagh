@@ -133,7 +133,7 @@ export async function insert(po: Omit<PurchaseOrderResponse, 'id' | 'creator_nam
     RETURNING *
   `;
   const { rows: poRows } = await client.query(sql, [
-    po.number, po.request_date, po.department, po.request_type, po.requester_name, po.status, po.notes ?? '', po.supplier_id ?? '', po.execution_date ?? '', po.attachment_url ?? '', po.total_amount ?? '', po.currency, po.created_by,
+    po.number, po.request_date, po.department, po.request_type, po.requester_name, po.status, po.notes ?? null, po.supplier_id ?? null, po.execution_date ?? null, po.attachment_url ?? null, po.total_amount ?? null, po.currency, po.created_by,
   ]);
   const inserted = poRows[0];
 
@@ -141,7 +141,7 @@ export async function insert(po: Omit<PurchaseOrderResponse, 'id' | 'creator_nam
     const values: any[] = [];
     const placeholders: string[] = [];
     items.forEach((it, idx) => {
-      values.push(inserted.id, it.item_id ?? '', it.item_code ?? '', it.item_name ?? '', it.quantity, it.unit, it.received_quantity ?? '', it.price ?? '', it.line_total ?? '', it.currency);
+      values.push(inserted.id, it.item_id ?? null, it.item_code ?? null, it.item_name ?? null, it.quantity, it.unit, it.received_quantity ?? null, it.price ?? null, it.line_total ?? null, it.currency);
       const base = idx * 10;
       placeholders.push(`($${base+1},$${base+2},$${base+3},$${base+4},$${base+5},$${base+6},$${base+7},$${base+8},$${base+9},$${base+10})`);
     });
