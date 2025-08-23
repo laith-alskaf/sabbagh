@@ -21,7 +21,7 @@ i18next
     defaultNS: 'common',
     
     // Load multiple namespaces
-    ns: ['common', 'auth', 'errors'],
+    ns: ['common', 'auth', 'errors','success'],
     
     // Backend configuration
     backend: {

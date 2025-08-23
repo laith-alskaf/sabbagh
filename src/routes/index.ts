@@ -10,6 +10,7 @@ import auditRoutes from './auditRoutes';
 import purchaseOrderRoutes from './purchaseOrderRoutes';
 import dashboardRoutes from './dashboardRoutes';
 import reportRoutes from './reportRoutes';
+import departmentRoutes from './departmentRoutes';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/audit-logs', auditRoutes);
 router.use('/purchase-orders', purchaseOrderRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/reports', reportRoutes);
+router.use('/departments', departmentRoutes);
 
 export default router;

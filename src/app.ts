@@ -39,7 +39,7 @@ if (env.isDevelopment) {
 
 // Welcome route
 app.get('/', (req: Request, res: Response) => {
-  res.json({ 
+  res.json({
     message: t(req, 'welcome'),
     language: req.language || 'en'
   });
@@ -51,8 +51,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 // API routes
 app.use('/api', routes);
 
-// Handle 404 errors
-// app.all('*', notFoundHandler);
 
 // Error logging middleware
 app.use(errorLoggingMiddleware);
