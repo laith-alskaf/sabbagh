@@ -44,16 +44,16 @@ export const getMyPurchaseOrders = asyncHandler(async (req: Request, res: Respon
     throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
   }
 
-  const { status, limit, offset } = req.query;
+ const { status, supplier_id, department, start_date, end_date, limit, offset } = req.query;
 
   const purchaseOrders = await purchaseOrderService.getPurchaseOrders(
     req.user.userId,
-    UserRole.EMPLOYEE, // Force employee role to only see own purchase orders
+    UserRole.EMPLOYEE,
     status as any,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
+    supplier_id as string,
+    department as string,
+    start_date ? new Date(start_date as string) : undefined,
+    end_date ? new Date(end_date as string) : undefined,
     limit ? parseInt(limit as string) : undefined,
     offset ? parseInt(offset as string) : undefined
   );

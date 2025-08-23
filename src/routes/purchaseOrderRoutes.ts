@@ -3,9 +3,9 @@ import * as purchaseOrderController from '../controllers/purchaseOrderController
 import { authenticateJWT, authorizeRoles } from '../middlewares/authMiddleware';
 import { UserRole } from '../types/models';
 import { validate, validateParams, validateQuery } from '../validators';
-import { 
-  createPurchaseOrderSchema, 
-  updatePurchaseOrderSchema, 
+import {
+  createPurchaseOrderSchema,
+  updatePurchaseOrderSchema,
   submitPurchaseOrderSchema,
   approvePurchaseOrderSchema,
   rejectPurchaseOrderSchema,
@@ -26,43 +26,7 @@ const router = Router();
 // Apply authentication middleware to all routes
 router.use(authenticateJWT);
 
-/**
- * @swagger
- * /purchase-orders/{id}:
- *   get:
- *     summary: Get a purchase order by ID
- *     tags: [Purchase Orders]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Purchase order ID
- *     responses:
- *       200:
- *         description: Purchase order details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/PurchaseOrder'
- *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
- *       404:
- *         $ref: '#/components/responses/NotFoundError'
- *       500:
- *         $ref: '#/components/responses/ServerError'
- */
-router.get('/:id', validateParams(purchaseOrderIdSchema), purchaseOrderController.getPurchaseOrderById);
+
 
 /**
  * @swagger
@@ -116,7 +80,48 @@ router.get('/:id', validateParams(purchaseOrderIdSchema), purchaseOrderControlle
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.get('/my', purchaseOrderController.getMyPurchaseOrders);
+router.get('/my', validateQuery(purchaseOrderQuerySchema), purchaseOrderController.getMyPurchaseOrders);
+
+
+/**
+ * @swagger
+ * /purchase-orders/{id}:
+ *   get:
+ *     summary: Get a purchase order by ID
+ *     tags: [Purchase Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Purchase order ID
+ *     responses:
+ *       200:
+ *         description: Purchase order details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/PurchaseOrder'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/:id', validateParams(purchaseOrderIdSchema), purchaseOrderController.getPurchaseOrderById);
+
+
 
 /**
  * @swagger
@@ -973,7 +978,7 @@ router.patch(
  */
 router.patch(
   '/:id/complete',
-  authorizeRoles([UserRole.MANAGER,UserRole.ASSISTANT_MANAGER]),
+  authorizeRoles([UserRole.MANAGER, UserRole.ASSISTANT_MANAGER]),
   validateParams(purchaseOrderIdSchema),
   validate(completePurchaseOrderSchema),
   purchaseOrderController.completePurchaseOrder
