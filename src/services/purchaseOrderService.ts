@@ -4,6 +4,8 @@ import { createAuditLog } from './auditService';
 import { AppError } from '../middlewares/errorMiddleware';
 import * as poRepo from '../repositories/purchaseOrderRepository';
 import { withTx } from '../repositories/tx';
+import { NotificationOrchestrator } from './notificationOrchestrator';
+import { PurchaseOrderNotifier } from './notif-purchars_order_action';
 
 /**
  * Generate a unique purchase order number
@@ -253,6 +255,14 @@ export const createPurchaseOrder = async (
     return inserted;
   });
 
+  // Notify assistant & manager about new PO
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onPurchaseOrderCreated(purchaseOrder);
+  } catch (e) {
+    console.error('Notification error on createPurchaseOrder:', e);
+  }
+
   return purchaseOrder;
 };
 
@@ -373,6 +383,14 @@ export const submitPurchaseOrder = async (
     return updated;
   });
 
+  // Notify creator about status change
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+  } catch (e) {
+    console.error('Notification error on submitPurchaseOrder:', e);
+  }
+
   return updatedPurchaseOrder;
 };
 
@@ -408,6 +426,14 @@ export const assistantApprove = async (
 
     return updated;
   });
+
+  // Notify creator about status change
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+  } catch (e) {
+    console.error('Notification error on assistantApprove:', e);
+  }
 
   return updatedPurchaseOrder;
 };
@@ -446,6 +472,14 @@ export const assistantReject = async (
     return updated;
   });
 
+  // Notify creator about status change
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+  } catch (e) {
+    console.error('Notification error on assistantReject:', e);
+  }
+
   return updatedPurchaseOrder;
 };
 
@@ -481,6 +515,14 @@ export const managerApprove = async (
 
     return updated;
   });
+
+  // Notify creator about status change
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+  } catch (e) {
+    console.error('Notification error on managerApprove:', e);
+  }
 
   return updatedPurchaseOrder;
 };
@@ -519,6 +561,14 @@ export const managerReject = async (
     return updated;
   });
 
+  // Notify creator about status change
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+  } catch (e) {
+    console.error('Notification error on managerReject:', e);
+  }
+
   return updatedPurchaseOrder;
 };
 
@@ -555,6 +605,14 @@ export const completePurchaseOrder = async (
 
     return updated;
   });
+
+  // Notify creator about status change
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+  } catch (e) {
+    console.error('Notification error on completePurchaseOrder:', e);
+  }
 
   return updatedPurchaseOrder;
 };

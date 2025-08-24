@@ -265,6 +265,15 @@ export async function getUserCountByRole(role: UserRole): Promise<number> {
   return parseInt(rows[0].count);
 }
 
+export async function getUserIdsByRoles(roles: UserRole[]): Promise<string[]> {
+  if (!roles.length) return [];
+  const { rows } = await pool.query(
+    'SELECT id FROM users WHERE role = ANY($1::text[]) AND active = true',
+    [roles]
+  );
+  return rows.map((r) => r.id as string);
+}
+
 /**
  * Get all departments
  */

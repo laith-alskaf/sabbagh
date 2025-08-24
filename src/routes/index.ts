@@ -11,6 +11,7 @@ import purchaseOrderRoutes from './purchaseOrderRoutes';
 import dashboardRoutes from './dashboardRoutes';
 import reportRoutes from './reportRoutes';
 import departmentRoutes from './departmentRoutes';
+import notificationRoutes from './notificationRoutes';
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use('/purchase-orders', purchaseOrderRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/reports', reportRoutes);
 router.use('/departments', departmentRoutes);
+router.use('/notifications', notificationRoutes);
 
 export default router;
