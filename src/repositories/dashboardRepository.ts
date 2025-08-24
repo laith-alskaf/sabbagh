@@ -76,12 +76,7 @@ export async function quickCounts() {
 export async function recentOrders(limit: number) {
   const { rows } = await pool.query(
     `SELECT 
-    po.id,
-    po.number,
-    po.request_date,
-    po.department,
-    po.request_type,
-    po.status,
+    po.*,
     v.name AS supplier_name,
     u.name AS requester_name,
     COALESCE(json_agg(poi.* ORDER BY poi.id) FILTER (WHERE poi.id IS NOT NULL), '[]') AS items
