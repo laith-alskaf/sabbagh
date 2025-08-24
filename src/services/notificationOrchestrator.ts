@@ -13,9 +13,10 @@ export class NotificationOrchestrator {
     await Promise.all(
       toUserIds.map((uid) => notifRepo.insert(uid, payload.type, payload.title, payload.body ?? null, { po }))
     );
-    // Collect FCM tokens and send
+    // Collect FCM tokens and send (ensure 'type' exists in data for client routing)
     const tokens = await fcmRepo.getTokensByUserIds(toUserIds);
-    await this.notifier.sendToTokens(tokens, { type: payload.type, title: payload.title, body: payload.body, data: payload.data });
+    const dataWithType: Record<string, string> = { type: payload.type, ...payload.data };
+    await this.notifier.sendToTokens(tokens, { type: payload.type, title: payload.title, body: payload.body, data: dataWithType });
   }
 
   async onPurchaseOrderCreated(po: PurchaseOrderResponse): Promise<void> {
