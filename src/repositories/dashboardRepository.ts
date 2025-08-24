@@ -75,13 +75,26 @@ export async function quickCounts() {
 
 export async function recentOrders(limit: number) {
   const { rows } = await pool.query(
-    `SELECT po.id, po.number, po.request_date, po.department, po.request_type, po.status, v.name as supplier_name, u.name as requester_name, COALESCE(json_agg(poi.*) FILTER (WHERE poi.id IS NOT NULL), '[]') AS items
-     FROM purchase_orders po
-     LEFT JOIN vendors v ON v.id = po.supplier_id
-     LEFT JOIN users u ON u.id = po.created_by
-     LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
-     ORDER BY po.created_at DESC
-     LIMIT $1`,
+    `SELECT 
+    po.id,
+    po.number,
+    po.request_date,
+    po.department,
+    po.request_type,
+    po.status,
+    v.name AS supplier_name,
+    u.name AS requester_name,
+    COALESCE(json_agg(poi.* ORDER BY poi.id) FILTER (WHERE poi.id IS NOT NULL), '[]') AS items
+  FROM purchase_orders po
+  LEFT JOIN vendors v ON v.id = po.supplier_id
+  LEFT JOIN users u ON u.id = po.created_by
+  LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
+  GROUP BY 
+    po.id, 
+    v.name, 
+    u.name
+  ORDER BY po.created_at DESC
+  LIMIT $1`,
     [limit]
   );
   return rows.map((r: any) => ({
