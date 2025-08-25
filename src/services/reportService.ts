@@ -197,11 +197,12 @@ export const getPurchaseOrderList = async (
     const totalValue = (order.items as any[]).reduce((sum, item: any) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
     return {
       id: order.id,
+      number:order.number,
       requestDate: order.request_date,
       department: order.department,
       status: order.status,
       supplierName: order.supplier_name || 'N/A',
-      requesterName: order.creator_name || order.requester_name,
+      requesterName: order.requester_name,
       currency: order.currency,
       totalValue,
       itemCount: (order.items as any[]).length,
