@@ -32,12 +32,16 @@ export async function removeTokensByValues(tokens: string[]): Promise<number> {
 }
 
 export async function getTokensByUserIds(userIds: string[]): Promise<string[]> {
+  console.log(`📱 FCM Token Debug - Getting tokens for user IDs: ${JSON.stringify(userIds)}`);
   if (!userIds.length) return [];
   const { rows } = await pool.query(
     `SELECT DISTINCT token FROM user_fcm_tokens WHERE user_id = ANY($1::uuid[])`,
     [userIds]
   );
-  return rows.map((r) => r.token as string);
+  console.log(`📱 FCM Token Debug - Found ${rows.length} tokens`);
+  const tokens = rows.map((r) => r.token as string);
+  console.log(`📱 FCM Token Debug - Tokens: ${JSON.stringify(tokens)}`);
+  return tokens;
 }
 
 export async function getTokensByRoles(roles: string[]): Promise<string[]> {

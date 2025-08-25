@@ -9,12 +9,19 @@ export class NotificationOrchestrator {
   constructor(private notifier: INotificationService) {}
 
   private async sendAndPersist(toUserIds: string[], payload: { type: string; title: string; body?: string; data: Record<string, string> }, po: PurchaseOrderResponse) {
+    console.log(`🔔 Notification Debug - toUserIds: ${JSON.stringify(toUserIds)}`);
+    console.log(`🔔 Notification Debug - payload: ${JSON.stringify(payload)}`);
+    
     // Persist per-user notification
     await Promise.all(
       toUserIds.map((uid) => notifRepo.insert(uid, payload.type, payload.title, payload.body ?? null, { po }))
     );
+    
     // Collect FCM tokens and send (ensure 'type' exists in data for client routing)
     const tokens = await fcmRepo.getTokensByUserIds(toUserIds);
+    console.log(`🔔 Notification Debug - FCM tokens found: ${tokens.length}`);
+    console.log(`🔔 Notification Debug - FCM tokens: ${JSON.stringify(tokens)}`);
+    
     const dataWithType: Record<string, string> = { type: payload.type, ...payload.data };
     await this.notifier.sendToTokens(tokens, { type: payload.type, title: payload.title, body: payload.body, data: dataWithType });
   }
@@ -22,7 +29,7 @@ export class NotificationOrchestrator {
   async onPurchaseOrderCreated(po: PurchaseOrderResponse): Promise<void> {
     // Notify assistant and manager roles
     const roleIds = await userRepo.getUserIdsByRoles([UserRole.ASSISTANT_MANAGER, UserRole.MANAGER]);
-    const data = buildPONotificationData(po) as unknown as Record<string, string>;
+    const data = buildPONotificationData(po);
     await this.sendAndPersist(roleIds, {
       type: 'po_created',
       title: `طلب شراء جديد ${po.number}`,
@@ -34,7 +41,7 @@ export class NotificationOrchestrator {
   async onStatusChanged(po: PurchaseOrderResponse, previous: PurchaseOrderStatus): Promise<void> {
     // Notify creator on any status change, with friendly Arabic messages
     const toUserIds = [po.created_by];
-    const data = buildPONotificationData(po) as unknown as Record<string, string>;
+    const data = buildPONotificationData(po);
 
     let type = 'po_status_changed';
     let title = `تغيير حالة الطلب ${po.number}`;

@@ -22,15 +22,23 @@ export interface PurchaseOrderNotificationData {
   currency?: string;
 }
 
-export function buildPONotificationData(po: PurchaseOrderResponse): PurchaseOrderNotificationData {
-  return {
+export function buildPONotificationData(po: PurchaseOrderResponse): Record<string, string> {
+  const data: Record<string, string> = {
     id: po.id,
     number: po.number,
     status: String(po.status),
     department: po.department,
     requester_name: po.requester_name,
     request_type: String(po.request_type),
-    total_amount: po.total_amount != null ? String(po.total_amount) : undefined,
-    currency: po.currency ? String(po.currency) : undefined,
   };
+  
+  // Only add optional fields if they have values
+  if (po.total_amount != null) {
+    data.total_amount = String(po.total_amount);
+  }
+  if (po.currency) {
+    data.currency = String(po.currency);
+  }
+  
+  return data;
 }

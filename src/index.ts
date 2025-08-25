@@ -6,9 +6,11 @@ const PORT = env.port;
 
 // Function to start server
 const startServer = () => {
-  const server = app.listen(PORT, () => {
+  const server = 
+  app.listen(PORT, () => {
     console.log(`Server running in ${env.nodeEnv} mode on port ${PORT}`);
     console.log(`Database URL: ${env.database.url ? 'Configured' : 'Not configured'}`);
+    console.log(`Server is running on http://localhost:3000`);
   });
 
   // Handle unhandled promise rejections

@@ -266,12 +266,16 @@ export async function getUserCountByRole(role: UserRole): Promise<number> {
 }
 
 export async function getUserIdsByRoles(roles: UserRole[]): Promise<string[]> {
+  console.log(`👥 User Debug - Getting user IDs for roles: ${JSON.stringify(roles)}`);
   if (!roles.length) return [];
   const { rows } = await pool.query(
     'SELECT id FROM users WHERE role = ANY($1::text[]) AND active = true',
     [roles]
   );
-  return rows.map((r) => r.id as string);
+  console.log(`👥 User Debug - Found ${rows.length} users with roles ${JSON.stringify(roles)}`);
+  const userIds = rows.map((r) => r.id as string);
+  console.log(`👥 User Debug - User IDs: ${JSON.stringify(userIds)}`);
+  return userIds;
 }
 
 /**
