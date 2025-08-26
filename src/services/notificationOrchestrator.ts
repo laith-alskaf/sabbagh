@@ -4,6 +4,7 @@ import * as notifRepo from '../repositories/notificationRepository';
 import * as userRepo from '../repositories/userRepository';
 import * as fcmRepo from '../repositories/fcmTokenRepository';
 import { buildPONotificationData, INotificationService } from '../utils/notification.service';
+import { tl } from '../utils/i18n';
 
 export class NotificationOrchestrator {
   constructor(private notifier: INotificationService) {}
@@ -26,14 +27,17 @@ export class NotificationOrchestrator {
     await this.notifier.sendToTokens(tokens, { type: payload.type, title: payload.title, body: payload.body, data: dataWithType });
   }
 
-  async onPurchaseOrderCreated(po: PurchaseOrderResponse): Promise<void> {
+  async onPurchaseOrderCreated(po: PurchaseOrderResponse, language: string = 'ar'): Promise<void> {
     // Notify assistant and manager roles
     const roleIds = await userRepo.getUserIdsByRoles([UserRole.ASSISTANT_MANAGER, UserRole.MANAGER]);
     const data = buildPONotificationData(po);
     await this.sendAndPersist(roleIds, {
       type: 'po_created',
-      title: `طلب شراء جديد ${po.number}`,
-      body: `${po.requester_name} (${po.department})` ,
+      title: tl(language, 'notifications.purchaseOrder.newOrder', { number: po.number }),
+      body: tl(language, 'notifications.purchaseOrder.newOrderBody', { 
+        requester: po.requester_name, 
+        department: po.department 
+      }),
       data,
     }, po);
   }

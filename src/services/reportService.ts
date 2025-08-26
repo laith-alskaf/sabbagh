@@ -206,6 +206,7 @@ export const getPurchaseOrderList = async (
       currency: order.currency,
       totalValue,
       itemCount: (order.items as any[]).length,
+      items:order.items as any[]
     };
   });
 

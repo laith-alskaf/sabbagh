@@ -55,5 +55,19 @@
     "assistant_manager": "Assistant Purchasing Manager",
     "employee": "Purchasing Employee",
     "guest": "Guest"
+  },
+  "notifications": {
+    "purchaseOrder": {
+      "newOrder": "New Purchase Order {{number}}",
+      "newOrderBody": "{{requester}} ({{department}})",
+      "statusChanged": "Purchase Order {{number}} Status Changed",
+      "sentToAssistant": "Purchase Order {{number}} sent to Assistant for review",
+      "sentToManager": "Purchase Order {{number}} sent to Manager for review",
+      "approved": "Purchase Order {{number}} approved",
+      "approvedBody": "Ready for execution",
+      "rejectedByAssistant": "Purchase Order {{number}} rejected by Assistant",
+      "rejectedByManager": "Purchase Order {{number}} rejected by Manager",
+      "completed": "Purchase Order {{number}} execution completed"
+    }
   }
 }

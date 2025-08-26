@@ -40,3 +40,14 @@ export const isRTL = (req: Request): boolean => {
 export const getNamespaceTranslations = (req: Request, namespace: string): Record<string, any> => {
   return i18next.getResourceBundle(req.language || 'en', namespace);
 };
+
+/**
+ * Translate a key for a specific language (without request object)
+ * @param language Language code
+ * @param key Translation key
+ * @param options Translation options
+ * @returns Translated string
+ */
+export const tl = (language: string, key: string, options?: Record<string, any>): string => {
+  return i18next.getFixedT(language)(key, options);
+};

@@ -55,5 +55,19 @@
     "assistant_manager": "مساعد مدير المشتريات",
     "employee": "موظف المشتريات",
     "guest": "ضيف"
+  },
+  "notifications": {
+    "purchaseOrder": {
+      "newOrder": "طلب شراء جديد {{number}}",
+      "newOrderBody": "{{requester}} ({{department}})",
+      "statusChanged": "تغيير حالة الطلب {{number}}",
+      "sentToAssistant": "تم إرسال الطلب {{number}} للمساعد للمراجعة",
+      "sentToManager": "تم إرسال الطلب {{number}} للمدير للمراجعة",
+      "approved": "تمت الموافقة على الطلب {{number}}",
+      "approvedBody": "يباشر التنفيذ",
+      "rejectedByAssistant": "تم رفض الطلب {{number}} من المساعد",
+      "rejectedByManager": "تم رفض الطلب {{number}} من المدير",
+      "completed": "اكتمل تنفيذ الطلب {{number}}"
+    }
   }
 }

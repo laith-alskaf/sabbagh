@@ -60,7 +60,8 @@
     "notUnderManagerReview": "يمكن الموافقة على طلبات الشراء أو رفضها من قبل المدير فقط إذا كانت قيد مراجعة المدير",
     "notInProgress": "يمكن تحديد طلبات الشراء كمكتملة فقط إذا كانت قيد التنفيذ",
     "alreadySubmitted": "تم تقديم طلب الشراء هذا بالفعل",
-    "notYourOrder": "ليس لديك إذن للوصول إلى طلب الشراء هذا"
+    "notYourOrder": "ليس لديك إذن للوصول إلى طلب الشراء هذا",
+    "updateOnlyDraftOrInProgress": "يُسمح بالتحديث فقط إذا كانت الحالة DRAFT أو IN_PROGRESS"
   },
   "user": {
     "notFound": "المستخدم غير موجود",
@@ -72,5 +73,9 @@
     "createFailed": "فشل إنشاء المستخدم",
     "updateFailed": "فشل تحديث المستخدم",
     "deleteFailed": "فشل حذف المستخدم"
+  },
+  "notification": {
+    "unauthorized": "وصول غير مصرح به",
+    "tokenRequired": "رمز الإشعار مطلوب"
   }
 }

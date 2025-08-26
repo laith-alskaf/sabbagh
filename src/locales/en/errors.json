@@ -60,7 +60,8 @@
     "notUnderManagerReview": "Only purchase orders under manager review can be approved or rejected by manager",
     "notInProgress": "Only in-progress purchase orders can be marked as completed",
     "alreadySubmitted": "This purchase order has already been submitted",
-    "notYourOrder": "You do not have permission to access this purchase order"
+    "notYourOrder": "You do not have permission to access this purchase order",
+    "updateOnlyDraftOrInProgress": "Updates are only allowed for DRAFT or IN_PROGRESS status"
   },
   "user": {
     "notFound": "User not found",
@@ -72,5 +73,9 @@
     "createFailed": "Failed to create user",
     "updateFailed": "Failed to update user",
     "deleteFailed": "Failed to delete user"
+  },
+  "notification": {
+    "unauthorized": "Unauthorized",
+    "tokenRequired": "token is required"
   }
 }

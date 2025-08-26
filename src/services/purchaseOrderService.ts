@@ -6,6 +6,7 @@ import * as poRepo from '../repositories/purchaseOrderRepository';
 import { withTx } from '../repositories/tx';
 import { NotificationOrchestrator } from './notificationOrchestrator';
 import { PurchaseOrderNotifier } from './notif-purchars_order_action';
+import { tl } from '../utils/i18n';
 
 /**
  * Generate a unique purchase order number
@@ -274,7 +275,8 @@ export const updatePurchaseOrder = async (
   id: string,
   data: UpdatePurchaseOrderRequest,
   userId: string,
-  userRole: UserRole
+  userRole: UserRole,
+  language: string = 'ar'
 ): Promise<PurchaseOrderResponse> => {
   // Get the purchase order
   const purchaseOrder = await poRepo.getById(id);
@@ -293,7 +295,7 @@ export const updatePurchaseOrder = async (
     purchaseOrder.status !== PurchaseOrderStatus.DRAFT &&
     purchaseOrder.status !== PurchaseOrderStatus.IN_PROGRESS
   ) {
-    throw new AppError('يُسمح بالتحديث فقط إذا كانت الحالة DRAFT أو IN_PROGRESS', 400);
+    throw new AppError(tl(language, 'purchaseOrder.updateOnlyDraftOrInProgress', { ns: 'errors' }), 400);
   }
   // Update the purchase order with items in a transaction
   const updatedPurchaseOrder = await withTx(async (client) => {

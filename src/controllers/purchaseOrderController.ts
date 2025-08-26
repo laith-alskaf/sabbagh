@@ -196,7 +196,8 @@ export const updatePurchaseOrder = asyncHandler(async (req: Request, res: Respon
       id,
       purchaseOrderData,
       req.user.userId,
-      req.user.role as UserRole
+      req.user.role as UserRole,
+      req.language || 'ar'
     );
 
     res.status(200).json({
