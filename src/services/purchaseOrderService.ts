@@ -388,7 +388,7 @@ export const submitPurchaseOrder = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status,nextStatus);
   } catch (e) {
     console.error('Notification error on submitPurchaseOrder:', e);
   }
@@ -432,7 +432,7 @@ export const assistantApprove = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status,PurchaseOrderStatus.UNDER_MANAGER_REVIEW);
   } catch (e) {
     console.error('Notification error on assistantApprove:', e);
   }
@@ -477,7 +477,7 @@ export const assistantReject = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status,PurchaseOrderStatus.REJECTED_BY_ASSISTANT);
   } catch (e) {
     console.error('Notification error on assistantReject:', e);
   }
@@ -521,7 +521,7 @@ export const managerApprove = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status,PurchaseOrderStatus.IN_PROGRESS);
   } catch (e) {
     console.error('Notification error on managerApprove:', e);
   }
@@ -566,7 +566,7 @@ export const managerReject = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status,PurchaseOrderStatus.REJECTED_BY_MANAGER);
   } catch (e) {
     console.error('Notification error on managerReject:', e);
   }
@@ -611,7 +611,7 @@ export const completePurchaseOrder = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status);
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status,PurchaseOrderStatus.COMPLETED);
   } catch (e) {
     console.error('Notification error on completePurchaseOrder:', e);
   }

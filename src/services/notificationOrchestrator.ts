@@ -42,14 +42,14 @@ export class NotificationOrchestrator {
     }, po);
   }
 
-  async onStatusChanged(po: PurchaseOrderResponse, previous: PurchaseOrderStatus): Promise<void> {
+  async onStatusChanged(po: PurchaseOrderResponse, previous: PurchaseOrderStatus, next: PurchaseOrderStatus): Promise<void> {
     // Notify creator on any status change, with friendly Arabic messages
     const toUserIds = [po.created_by];
     const data = buildPONotificationData(po);
 
     let type = 'po_status_changed';
     let title = `تغيير حالة الطلب ${po.number}`;
-    let body = `${previous} → ${po.status}`;
+    let body = `${previous} → ${next}`;
 
     switch (po.status) {
       case PurchaseOrderStatus.UNDER_ASSISTANT_REVIEW:
