@@ -51,7 +51,7 @@ export class NotificationOrchestrator {
     let title = `تغيير حالة الطلب ${po.number}`;
     let body = `${previous} → ${next}`;
 
-    switch (po.status) {
+    switch (next) {
       case PurchaseOrderStatus.UNDER_ASSISTANT_REVIEW:
         title = `تم إرسال الطلب ${po.number} للمساعد للمراجعة`;
         break;
