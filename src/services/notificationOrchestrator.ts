@@ -7,22 +7,22 @@ import { buildPONotificationData, INotificationService } from '../utils/notifica
 import { tl } from '../utils/i18n';
 
 export class NotificationOrchestrator {
-  constructor(private notifier: INotificationService) {}
+  constructor(private notifier: INotificationService) { }
 
   private async sendAndPersist(toUserIds: string[], payload: { type: string; title: string; body?: string; data: Record<string, string> }, po: PurchaseOrderResponse) {
     console.log(`🔔 Notification Debug - toUserIds: ${JSON.stringify(toUserIds)}`);
     console.log(`🔔 Notification Debug - payload: ${JSON.stringify(payload)}`);
-    
+
     // Persist per-user notification
     await Promise.all(
       toUserIds.map((uid) => notifRepo.insert(uid, payload.type, payload.title, payload.body ?? null, { po }))
     );
-    
+
     // Collect FCM tokens and send (ensure 'type' exists in data for client routing)
     const tokens = await fcmRepo.getTokensByUserIds(toUserIds);
     console.log(`🔔 Notification Debug - FCM tokens found: ${tokens.length}`);
     console.log(`🔔 Notification Debug - FCM tokens: ${JSON.stringify(tokens)}`);
-    
+
     const dataWithType: Record<string, string> = { type: payload.type, ...payload.data };
     await this.notifier.sendToTokens(tokens, { type: payload.type, title: payload.title, body: payload.body, data: dataWithType });
   }
@@ -34,9 +34,9 @@ export class NotificationOrchestrator {
     await this.sendAndPersist(roleIds, {
       type: 'po_created',
       title: tl(language, 'notifications.purchaseOrder.newOrder', { number: po.number }),
-      body: tl(language, 'notifications.purchaseOrder.newOrderBody', { 
-        requester: po.requester_name, 
-        department: po.department 
+      body: tl(language, 'notifications.purchaseOrder.newOrderBody', {
+        requester: po.requester_name,
+        department: po.department
       }),
       data,
     }, po);
@@ -56,8 +56,21 @@ export class NotificationOrchestrator {
         title = `تم إرسال الطلب ${po.number} للمساعد للمراجعة`;
         break;
       case PurchaseOrderStatus.UNDER_MANAGER_REVIEW:
+
         title = `تم إرسال الطلب ${po.number} للمدير للمراجعة`;
+        const roleIds = await userRepo.getUserIdsByRoles([UserRole.MANAGER]);
+        const data = buildPONotificationData(po);
+        await this.sendAndPersist(roleIds, {
+          type: 'po_created',
+          title: tl('ar', 'purchaseOrder.status.under_manager_review', { number: po.number }),
+          body: tl('ar', 'notifications.purchaseOrder.newOrderBody', {
+            requester: po.requester_name,
+            department: po.department
+          }),
+          data,
+        }, po);
         break;
+
       case PurchaseOrderStatus.IN_PROGRESS:
         type = 'po_approved';
         title = `تمت الموافقة على الطلب ${po.number}`;
