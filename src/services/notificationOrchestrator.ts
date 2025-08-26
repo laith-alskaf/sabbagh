@@ -42,28 +42,27 @@ export class NotificationOrchestrator {
     }, po);
   }
 
-  async onStatusChanged(po: PurchaseOrderResponse, previous: PurchaseOrderStatus, next: PurchaseOrderStatus): Promise<void> {
-    // Notify creator on any status change, with friendly Arabic messages
+  async onStatusChanged(po: PurchaseOrderResponse, previous: PurchaseOrderStatus, next: PurchaseOrderStatus, language: string = 'ar'): Promise<void> {
+    // Notify creator on any status change, with friendly messages
     const toUserIds = [po.created_by];
     const data = buildPONotificationData(po);
 
     let type = 'po_status_changed';
-    let title = `تغيير حالة الطلب ${po.number}`;
+    let title = tl(language, 'notifications.purchaseOrder.statusChanged', { number: po.number });
     let body = `${previous} → ${next}`;
 
     switch (next) {
       case PurchaseOrderStatus.UNDER_ASSISTANT_REVIEW:
-        title = `تم إرسال الطلب ${po.number} للمساعد للمراجعة`;
+        title = tl(language, 'notifications.purchaseOrder.sentToAssistant', { number: po.number });
         break;
       case PurchaseOrderStatus.UNDER_MANAGER_REVIEW:
-
-        title = `تم إرسال الطلب ${po.number} للمدير للمراجعة`;
+        title = tl(language, 'notifications.purchaseOrder.sentToManager', { number: po.number });
+        // Also notify managers about new order for review
         const roleIds = await userRepo.getUserIdsByRoles([UserRole.MANAGER]);
-        const data = buildPONotificationData(po);
         await this.sendAndPersist(roleIds, {
           type: 'po_created',
-          title: tl('ar', 'purchaseOrder.status.under_manager_review', { number: po.number }),
-          body: tl('ar', 'notifications.purchaseOrder.newOrderBody', {
+          title: tl(language, 'notifications.purchaseOrder.newOrder', { number: po.number }),
+          body: tl(language, 'notifications.purchaseOrder.newOrderBody', {
             requester: po.requester_name,
             department: po.department
           }),
@@ -73,22 +72,22 @@ export class NotificationOrchestrator {
 
       case PurchaseOrderStatus.IN_PROGRESS:
         type = 'po_approved';
-        title = `تمت الموافقة على الطلب ${po.number}`;
-        body = `يباشر التنفيذ`;
+        title = tl(language, 'notifications.purchaseOrder.approved', { number: po.number });
+        body = tl(language, 'notifications.purchaseOrder.approvedBody');
         break;
       case PurchaseOrderStatus.REJECTED_BY_ASSISTANT:
         type = 'po_rejected';
-        title = `تم رفض الطلب ${po.number} من المساعد`;
+        title = tl(language, 'notifications.purchaseOrder.rejectedByAssistant', { number: po.number });
         body = '';
         break;
       case PurchaseOrderStatus.REJECTED_BY_MANAGER:
         type = 'po_rejected';
-        title = `تم رفض الطلب ${po.number} من المدير`;
+        title = tl(language, 'notifications.purchaseOrder.rejectedByManager', { number: po.number });
         body = '';
         break;
       case PurchaseOrderStatus.COMPLETED:
         type = 'po_completed';
-        title = `اكتمل تنفيذ الطلب ${po.number}`;
+        title = tl(language, 'notifications.purchaseOrder.completed', { number: po.number });
         body = '';
         break;
       default:

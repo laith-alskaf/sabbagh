@@ -10,8 +10,8 @@ import { t } from '../utils/i18n';
  * GET /items
  */
 export const getItems = asyncHandler(async (req: Request, res: Response) => {
-  const { name, code, status, limit, offset } = req.query;
-  
+  const { name, code, status, limit, offset, search } = req.query;
+
   const items = await itemService.getItems(
     name as string,
     code as string,
@@ -19,7 +19,7 @@ export const getItems = asyncHandler(async (req: Request, res: Response) => {
     limit ? parseInt(limit as string) : undefined,
     offset ? parseInt(offset as string) : undefined
   );
-  
+
   res.status(200).json({
     success: true,
     count: items.length,
@@ -33,13 +33,13 @@ export const getItems = asyncHandler(async (req: Request, res: Response) => {
  */
 export const getItemById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  
+
   const item = await itemService.getItemById(id);
-  
+
   if (!item) {
     throw new AppError(t(req, 'item.notFound', { ns: 'errors' }), 404);
   }
-  
+
   res.status(200).json({
     success: true,
     data: item,
@@ -54,19 +54,19 @@ export const createItem = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
     throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
   }
-  
+
   const itemData: CreateItemRequest = req.body;
-  
+
   // Validate required fields
   if (!itemData.name || !itemData.unit || !itemData.code || !itemData.status) {
     throw new AppError(t(req, 'validation.requiredFields', { ns: 'errors' }), 400);
   }
-  
+
   // If user is a manager, create the item directly
   if (req.user.role === UserRole.MANAGER) {
     try {
       const item = await itemService.createItem(itemData, req.user.userId);
-      
+
       res.status(201).json({
         success: true,
         message: t(req, 'item.created', { ns: 'common' }),
@@ -81,7 +81,7 @@ export const createItem = asyncHandler(async (req: Request, res: Response) => {
         500
       );
     }
-  } 
+  }
   // If user is an assistant manager, create a change request
   else if (req.user.role === UserRole.ASSISTANT_MANAGER) {
     const changeRequest = await itemService.createItemChangeRequest(
@@ -90,7 +90,7 @@ export const createItem = asyncHandler(async (req: Request, res: Response) => {
       null,
       req.user.userId
     );
-    
+
     res.status(201).json({
       success: true,
       message: t(req, 'changeRequest.created', { ns: 'common' }),
@@ -109,22 +109,22 @@ export const updateItem = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
     throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
   }
-  
+
   const { id } = req.params;
   const itemData: UpdateItemRequest = req.body;
-  
+
   // Check if item exists
   const existingItem = await itemService.getItemById(id);
-  
+
   if (!existingItem) {
     throw new AppError(t(req, 'item.notFound', { ns: 'errors' }), 404);
   }
-  
+
   // If user is a manager, update the item directly
   if (req.user.role === UserRole.MANAGER) {
     try {
       const item = await itemService.updateItem(id, itemData, req.user.userId);
-      
+
       res.status(200).json({
         success: true,
         message: t(req, 'item.updated', { ns: 'common' }),
@@ -139,7 +139,7 @@ export const updateItem = asyncHandler(async (req: Request, res: Response) => {
         500
       );
     }
-  } 
+  }
   // If user is an assistant manager, create a change request
   else if (req.user.role === UserRole.ASSISTANT_MANAGER) {
     const changeRequest = await itemService.createItemChangeRequest(
@@ -148,7 +148,7 @@ export const updateItem = asyncHandler(async (req: Request, res: Response) => {
       id,
       req.user.userId
     );
-    
+
     res.status(200).json({
       success: true,
       message: t(req, 'changeRequest.created', { ns: 'common' }),
@@ -167,26 +167,26 @@ export const deleteItem = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
     throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
   }
-  
+
   const { id } = req.params;
-  
+
   // Check if item exists
   const existingItem = await itemService.getItemById(id);
-  
+
   if (!existingItem) {
     throw new AppError(t(req, 'item.notFound', { ns: 'errors' }), 404);
   }
-  
+
   // If user is a manager, delete the item directly
   if (req.user.role === UserRole.MANAGER) {
     await itemService.deleteItem(id, req.user.userId);
-    
+
     res.status(200).json({
       success: true,
       message: t(req, 'item.deleted', { ns: 'common' }),
       data: null,
     });
-  } 
+  }
   // If user is an assistant manager, create a change request
   else if (req.user.role === UserRole.ASSISTANT_MANAGER) {
     const changeRequest = await itemService.createItemChangeRequest(
@@ -195,7 +195,7 @@ export const deleteItem = asyncHandler(async (req: Request, res: Response) => {
       id,
       req.user.userId
     );
-    
+
     res.status(200).json({
       success: true,
       message: t(req, 'changeRequest.created', { ns: 'common' }),
