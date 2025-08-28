@@ -1,4 +1,4 @@
-import { PurchaseOrderStatus, UserRole } from '../types/models';
+import { PurchaseOrderStatus, User, UserRole } from '../types/models';
 import { CreatePurchaseOrderRequest, PurchaseOrderResponse, UpdatePurchaseOrderRequest, PurchaseOrderItemResponse } from '../types/purchaseOrder';
 import { createAuditLog } from './auditService';
 import { AppError } from '../middlewares/errorMiddleware';
@@ -86,19 +86,18 @@ export const getPurchaseOrders = async (
   offset = 0
 ): Promise<PurchaseOrderResponse[]> => {
   const where: any = {};
-  var role: UserRole | null = null;
-  // If user is an employee, only show their own purchase orders
+  var underMe: PurchaseOrderStatus | null = null;
   if (userRole === UserRole.EMPLOYEE || userRole === UserRole.FINANCE_MANAGER || userRole === UserRole.GENERAL_MANAGER || userRole === UserRole.PROCUREMENT_OFFICER) {
     where.created_by = userId;
   }
   if (userRole === UserRole.FINANCE_MANAGER) {
-    status = PurchaseOrderStatus.UNDER_FINANCE_REVIEW
+    underMe = PurchaseOrderStatus.UNDER_FINANCE_REVIEW
   }
   if (userRole === UserRole.GENERAL_MANAGER) {
-    status = PurchaseOrderStatus.UNDER_GENERAL_MANAGER_REVIEW
+    underMe = PurchaseOrderStatus.UNDER_GENERAL_MANAGER_REVIEW
   }
   if (userRole === UserRole.PROCUREMENT_OFFICER) {
-    status = PurchaseOrderStatus.PENDING_PROCUREMENT;
+    underMe = PurchaseOrderStatus.PENDING_PROCUREMENT;
   }
   if (status) {
     status = status;
@@ -131,6 +130,7 @@ export const getPurchaseOrders = async (
     userId,
     employeeOnly: true,
     status,
+    under_me: underMe,
     supplier_id,
     department,
     start_date,

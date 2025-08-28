@@ -16,6 +16,7 @@ export async function list(params: {
   userId?: string;
   employeeOnly?: boolean;
   status?: PurchaseOrderStatus;
+  under_me?: PurchaseOrderStatus | null;
   supplier_id?: string;
   department?: string;
   start_date?: Date;
@@ -26,9 +27,10 @@ export async function list(params: {
   const conds: string[] = [];
   const vals: any[] = [];
   // if (params.employeeOnly && params.userId) { vals.push(params.userId); conds.push(`po.created_by = $${vals.length}`); }
-  if (params.employeeOnly && params.userId) {
+  if (params.employeeOnly && params.userId && params.under_me) {
     vals.push(params.userId);
-    conds.push(`(po.created_by = $${vals.length} OR po.status = '${params.status}')`);
+    vals.push(params.under_me);
+    conds.push(`(po.created_by = $${vals.length} OR po.status = '${params.under_me}')`);
 
   }
   if (params.status) { vals.push(params.status); conds.push(`po.status = $${vals.length}`); }
