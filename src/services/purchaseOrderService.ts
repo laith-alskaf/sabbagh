@@ -120,7 +120,7 @@ export const getPurchaseOrders = async (
 
   const purchaseOrders = await poRepo.list({
     userId,
-    employeeOnly: userRole === UserRole.EMPLOYEE,
+    employeeOnly: true,
     status,
     supplier_id,
     department,
