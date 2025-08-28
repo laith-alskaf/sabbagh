@@ -1,6 +1,6 @@
 import { pool } from '../config/database';
 import { PurchaseOrderResponse, PurchaseOrderItemResponse } from '../types/purchaseOrder';
-import { PurchaseOrderStatus } from '../types/models';
+import { PurchaseOrderStatus, UserRole } from '../types/models';
 
 export async function countForMonth(year: number, month: number): Promise<number> {
   const start = new Date(year, month, 1);
@@ -15,6 +15,7 @@ export async function countForMonth(year: number, month: number): Promise<number
 export async function list(params: {
   userId?: string;
   employeeOnly?: boolean;
+  role?: UserRole | null;
   status?: PurchaseOrderStatus;
   supplier_id?: string;
   department?: string;
@@ -26,10 +27,11 @@ export async function list(params: {
   const conds: string[] = [];
   const vals: any[] = [];
   if (params.employeeOnly && params.userId) { vals.push(params.userId); conds.push(`po.created_by = $${vals.length}`); }
+  if (params.role != null) { vals.push(params.role); conds.push(`po.role = $${vals.length}`); }
   if (params.status) { vals.push(params.status); conds.push(`po.status = $${vals.length}`); }
   if (params.supplier_id) { vals.push(params.supplier_id); conds.push(`po.supplier_id = $${vals.length}`); }
   if (params.department) { vals.push(params.department); conds.push(`po.department = $${vals.length}`); }
-  if (params.start_date && params.end_date) { vals.push(params.start_date, params.end_date); conds.push(`po.request_date BETWEEN $${vals.length-1} AND $${vals.length}`); }
+  if (params.start_date && params.end_date) { vals.push(params.start_date, params.end_date); conds.push(`po.request_date BETWEEN $${vals.length - 1} AND $${vals.length}`); }
   else if (params.start_date) { vals.push(params.start_date); conds.push(`po.request_date >= $${vals.length}`); }
   else if (params.end_date) { vals.push(params.end_date); conds.push(`po.request_date <= $${vals.length}`); }
   const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
@@ -143,7 +145,7 @@ export async function insert(po: Omit<PurchaseOrderResponse, 'id' | 'creator_nam
     items.forEach((it, idx) => {
       values.push(inserted.id, it.item_id ?? null, it.item_code ?? null, it.item_name ?? null, it.quantity, it.unit, it.received_quantity ?? null, it.price ?? null, it.line_total ?? null, it.currency);
       const base = idx * 10;
-      placeholders.push(`($${base+1},$${base+2},$${base+3},$${base+4},$${base+5},$${base+6},$${base+7},$${base+8},$${base+9},$${base+10})`);
+      placeholders.push(`($${base + 1},$${base + 2},$${base + 3},$${base + 4},$${base + 5},$${base + 6},$${base + 7},$${base + 8},$${base + 9},$${base + 10})`);
     });
     const insertItemsSql = `
       INSERT INTO purchase_order_items (purchase_order_id, item_id, item_code, item_name, quantity, unit, received_quantity, price, line_total, currency)

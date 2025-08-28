@@ -7,6 +7,7 @@ import { withTx } from '../repositories/tx';
 import { NotificationOrchestrator } from './notificationOrchestrator';
 import { PurchaseOrderNotifier } from './notif-purchars_order_action';
 import { tl } from '../utils/i18n';
+import { string } from 'zod';
 
 /**
  * Generate a unique purchase order number
@@ -85,12 +86,14 @@ export const getPurchaseOrders = async (
   offset = 0
 ): Promise<PurchaseOrderResponse[]> => {
   const where: any = {};
-
+  var role: UserRole | null = null;
   // If user is an employee, only show their own purchase orders
   if (userRole === UserRole.EMPLOYEE || userRole === UserRole.FINANCE_MANAGER || userRole === UserRole.GENERAL_MANAGER || userRole === UserRole.PROCUREMENT_OFFICER) {
     where.created_by = userId;
   }
-
+  if (userRole === UserRole.FINANCE_MANAGER || userRole === UserRole.GENERAL_MANAGER || userRole === UserRole.PROCUREMENT_OFFICER) {
+    role = userRole;
+  }
   if (status) {
     where.status = status;
   }
@@ -121,6 +124,7 @@ export const getPurchaseOrders = async (
   const purchaseOrders = await poRepo.list({
     userId,
     employeeOnly: true,
+    role: role,
     status,
     supplier_id,
     department,
