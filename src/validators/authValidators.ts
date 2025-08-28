@@ -5,7 +5,7 @@ const UserRole = z.enum(['manager', 'assistant_manager', 'employee']);
 
 // Login schema
 export const loginSchema = z.object({
-  email: z.string().email({ message: 'Invalid email format' }),
+  email: z.string().email({ message: 'Invalid email format' }).toLowerCase(),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 

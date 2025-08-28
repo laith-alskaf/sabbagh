@@ -48,7 +48,7 @@ export const getMyPurchaseOrders = asyncHandler(async (req: Request, res: Respon
 
   const purchaseOrders = await purchaseOrderService.getPurchaseOrders(
     req.user.userId,
-    UserRole.EMPLOYEE,
+    req.user.role,
     status as any,
     supplier_id as string,
     department as string,
