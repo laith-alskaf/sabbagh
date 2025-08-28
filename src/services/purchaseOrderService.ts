@@ -87,7 +87,7 @@ export const getPurchaseOrders = async (
   const where: any = {};
 
   // If user is an employee, only show their own purchase orders
-  if (userRole === UserRole.EMPLOYEE) {
+  if (userRole === UserRole.EMPLOYEE || userRole === UserRole.FINANCE_MANAGER || userRole === UserRole.GENERAL_MANAGER || userRole === UserRole.PROCUREMENT_OFFICER) {
     where.created_by = userId;
   }
 
