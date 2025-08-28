@@ -30,7 +30,7 @@ export async function list(params: {
   if (params.employeeOnly && params.userId && params.under_me) {
     vals.push(params.userId);
     vals.push(params.under_me);
-    conds.push(`(po.created_by = $${vals.length - 1} OR po.status = '${vals.length}')`);
+  conds.push(`(po.created_by = $${vals.length - 1} OR po.status = $${vals.length})`);
 
   }
   if (params.status) { vals.push(params.status); conds.push(`po.status = $${vals.length}`); }
