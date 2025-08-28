@@ -47,14 +47,23 @@
       "under_manager_review": "Under Manager Review",
       "rejected_by_manager": "Rejected by Manager",
       "in_progress": "In Progress",
-      "completed": "Completed"
+      "completed": "Completed",
+      "under_finance_review": "Under Finance Review",
+      "rejected_by_finance": "Rejected by Finance",
+      "under_general_manager_review": "Under General Manager Review",
+      "rejected_by_general_manager": "Rejected by General Manager",
+      "pending_procurement": "Pending Procurement",
+      "returned_to_manager_review": "Returned to Manager Review"
     }
   },
   "roles": {
     "manager": "Purchasing Manager",
     "assistant_manager": "Assistant Purchasing Manager",
     "employee": "Purchasing Employee",
-    "guest": "Guest"
+    "guest": "Guest",
+    "general_manager": "General Manager",
+    "finance_manager": "Finance Manager",
+    "procurement_officer": "Procurement Officer"
   },
   "notifications": {
     "purchaseOrder": {
@@ -67,7 +76,13 @@
       "approvedBody": "Ready for execution",
       "rejectedByAssistant": "Purchase Order {{number}} rejected by Assistant",
       "rejectedByManager": "Purchase Order {{number}} rejected by Manager",
-      "completed": "Purchase Order {{number}} execution completed"
+      "completed": "Purchase Order {{number}} execution completed",
+      "sentToFinance": "Purchase Order {{number}} sent to Finance",
+      "sentToGeneralManager": "Purchase Order {{number}} sent to General Manager",
+      "sentToProcurement": "Purchase Order {{number}} sent to Procurement",
+      "returnedToManager": "Purchase Order {{number}} returned to Manager for final review",
+      "rejectedByFinance": "Purchase Order {{number}} rejected by Finance",
+      "rejectedByGeneralManager": "Purchase Order {{number}} rejected by General Manager"
     }
   }
 }

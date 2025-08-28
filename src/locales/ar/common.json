@@ -47,14 +47,23 @@
       "under_manager_review": "قيد مراجعة المدير",
       "rejected_by_manager": "مرفوض من قبل المدير",
       "in_progress": "قيد التنفيذ",
-      "completed": "مكتمل"
+      "completed": "مكتمل",
+      "under_finance_review": "قيد مراجعة المدير المالي",
+      "rejected_by_finance": "مرفوض من المدير المالي",
+      "under_general_manager_review": "قيد مراجعة المدير العام",
+      "rejected_by_general_manager": "مرفوض من المدير العام",
+      "pending_procurement": "بانتظار قسم المشتريات",
+      "returned_to_manager_review": "معاد إلى المدير للمراجعة النهائية"
     }
   },
   "roles": {
     "manager": "مدير المشتريات",
     "assistant_manager": "مساعد مدير المشتريات",
     "employee": "موظف المشتريات",
-    "guest": "ضيف"
+    "guest": "ضيف",
+    "general_manager": "المدير العام",
+    "finance_manager": "المدير المالي",
+    "procurement_officer": "موظف المشتريات"
   },
   "notifications": {
     "purchaseOrder": {
@@ -67,7 +76,13 @@
       "approvedBody": "يباشر التنفيذ",
       "rejectedByAssistant": "تم رفض الطلب {{number}} من المساعد",
       "rejectedByManager": "تم رفض الطلب {{number}} من المدير",
-      "completed": "اكتمل تنفيذ الطلب {{number}}"
+      "completed": "اكتمل تنفيذ الطلب {{number}}",
+      "sentToFinance": "تم إرسال الطلب {{number}} للمالية للمراجعة",
+      "sentToGeneralManager": "تم إرسال الطلب {{number}} للمدير العام",
+      "sentToProcurement": "تم إرسال الطلب {{number}} إلى المشتريات",
+      "returnedToManager": "تمت إعادة الطلب {{number}} للمدير للمراجعة النهائية",
+      "rejectedByFinance": "تم رفض الطلب {{number}} من المالية",
+      "rejectedByGeneralManager": "تم رفض الطلب {{number}} من المدير العام"
     }
   }
 }

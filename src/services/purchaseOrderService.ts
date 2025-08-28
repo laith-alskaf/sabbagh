@@ -618,3 +618,343 @@ export const completePurchaseOrder = async (
 
   return updatedPurchaseOrder;
 };
+
+/**
+ * Route purchase order to Finance, GM, or Procurement
+ */
+export const routePurchaseOrder = async (
+  id: string,
+  userId: string,
+  userRole: UserRole,
+  next: 'finance' | 'gm' | 'procurement',
+  notes?: string,
+  language: string = 'ar'
+): Promise<PurchaseOrderResponse> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+
+  // Assistant can route when it's under assistant review; Manager when under manager review
+  const canAssistant = userRole === UserRole.ASSISTANT_MANAGER && po.status === PurchaseOrderStatus.UNDER_ASSISTANT_REVIEW;
+  const canManager = userRole === UserRole.MANAGER && po.status === PurchaseOrderStatus.UNDER_MANAGER_REVIEW;
+  if (!canAssistant && !canManager) {
+    throw new AppError('Invalid state for routing', 400);
+  }
+
+  const previous = po.status;
+  let to: PurchaseOrderStatus;
+  if (next === 'finance') to = PurchaseOrderStatus.UNDER_FINANCE_REVIEW;
+  else if (next === 'gm') to = PurchaseOrderStatus.UNDER_GENERAL_MANAGER_REVIEW;
+  else to = PurchaseOrderStatus.PENDING_PROCUREMENT;
+
+  const updated = await withTx(async (client) => {
+    const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(
+      id,
+      to,
+      { notesAppend: notes },
+      client
+    );
+    await createAuditLog(userId, 'route_purchase_order', 'purchase_order', res.id, {
+      from_status: previous,
+      to_status: to,
+      next,
+      notes: notes ?? null,
+    });
+    return res;
+  });
+
+  // Notifications
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updated, previous, to, language);
+  } catch (e) {
+    console.error('Notification error on routePurchaseOrder:', e);
+  }
+
+  return updated;
+};
+
+/**
+ * Finance Manager approve
+ */
+export const financeApprove = async (
+  id: string,
+  userId: string,
+  language: string = 'ar'
+): Promise<PurchaseOrderResponse> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+  if (po.status !== PurchaseOrderStatus.UNDER_FINANCE_REVIEW) throw new AppError('Not under finance review', 400);
+
+  const previous = po.status;
+  const to = PurchaseOrderStatus.PENDING_PROCUREMENT;
+
+  const updated = await withTx(async (client) => {
+    const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
+    await createAuditLog(userId, 'finance_approve_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to });
+    return res;
+  });
+
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updated, previous, to, language);
+  } catch (e) {
+    console.error('Notification error on financeApprove:', e);
+  }
+
+  return updated;
+};
+
+export const financeReject = async (
+  id: string,
+  userId: string,
+  reason?: string,
+  language: string = 'ar'
+): Promise<PurchaseOrderResponse> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+  if (po.status !== PurchaseOrderStatus.UNDER_FINANCE_REVIEW) throw new AppError('Not under finance review', 400);
+
+  const previous = po.status;
+  const to = PurchaseOrderStatus.REJECTED_BY_FINANCE;
+
+  const updated = await withTx(async (client) => {
+    const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, { notesAppend: reason }, client);
+    await createAuditLog(userId, 'finance_reject_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to, reason });
+    return res;
+  });
+
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updated, previous, to, language);
+  } catch (e) {
+    console.error('Notification error on financeReject:', e);
+  }
+
+  return updated;
+};
+
+/**
+ * General Manager approve/reject
+ */
+export const generalManagerApprove = async (
+  id: string,
+  userId: string,
+  language: string = 'ar'
+): Promise<PurchaseOrderResponse> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+  if (po.status !== PurchaseOrderStatus.UNDER_GENERAL_MANAGER_REVIEW) throw new AppError('Not under general manager review', 400);
+
+  const previous = po.status;
+  const to = PurchaseOrderStatus.PENDING_PROCUREMENT;
+
+  const updated = await withTx(async (client) => {
+    const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
+    await createAuditLog(userId, 'gm_approve_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to });
+    return res;
+  });
+
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updated, previous, to, language);
+  } catch (e) {
+    console.error('Notification error on generalManagerApprove:', e);
+  }
+
+  return updated;
+};
+
+export const generalManagerReject = async (
+  id: string,
+  userId: string,
+  reason?: string,
+  language: string = 'ar'
+): Promise<PurchaseOrderResponse> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+  if (po.status !== PurchaseOrderStatus.UNDER_GENERAL_MANAGER_REVIEW) throw new AppError('Not under general manager review', 400);
+
+  const previous = po.status;
+  const to = PurchaseOrderStatus.REJECTED_BY_GENERAL_MANAGER;
+
+  const updated = await withTx(async (client) => {
+    const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, { notesAppend: reason }, client);
+    await createAuditLog(userId, 'gm_reject_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to, reason });
+    return res;
+  });
+
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updated, previous, to, language);
+  } catch (e) {
+    console.error('Notification error on generalManagerReject:', e);
+  }
+
+  return updated;
+};
+
+/**
+ * Procurement updates execution fields and optionally moves to IN_PROGRESS
+ */
+export const procurementUpdate = async (
+  id: string,
+  userId: string,
+  body: { attachment_url?: string | null; items: Array<{ id?: string; received_quantity?: number | null; price?: number | null; line_total?: number | null; }> },
+  language: string = 'ar'
+): Promise<PurchaseOrderResponse> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+
+  if (po.status !== PurchaseOrderStatus.PENDING_PROCUREMENT && po.status !== PurchaseOrderStatus.IN_PROGRESS) {
+    throw new AppError('Invalid state for procurement update', 400);
+  }
+
+  // Merge item updates onto existing items
+  const updatesById = new Map<string, { received_quantity?: number | null; price?: number | null; line_total?: number | null; }>();
+  for (const it of body.items || []) {
+    if (it.id) updatesById.set(it.id, { received_quantity: it.received_quantity, price: it.price, line_total: it.line_total });
+  }
+
+  const mergedItems = (po.items || []).map((item) => {
+    const upd = item.id ? updatesById.get(item.id) : undefined;
+    return {
+      id: item.id,
+      item_id: item.item_id ?? null,
+      item_code: item.item_code ?? null,
+      item_name: item.item_name ?? null,
+      quantity: item.quantity,
+      unit: item.unit,
+      received_quantity: upd?.received_quantity ?? item.received_quantity ?? null,
+      price: upd?.price ?? item.price ?? null,
+      line_total: upd?.line_total ?? item.line_total ?? null,
+      currency: item.currency ?? null,
+    } as any;
+  });
+
+  const previous = po.status;
+  const nextStatus = po.status === PurchaseOrderStatus.PENDING_PROCUREMENT ? PurchaseOrderStatus.IN_PROGRESS : po.status;
+
+  const updated = await withTx(async (client) => {
+    // Update attachment and items using existing draft updater (works for core fields)
+    const res = await (await import('../repositories/purchaseOrderMutations')).updateDraft(
+      id,
+      { attachment_url: body.attachment_url ?? po.attachment_url } as any,
+      mergedItems,
+      client
+    );
+    // If status needs to move to IN_PROGRESS, do it now
+    const finalRes = nextStatus !== previous
+      ? await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, nextStatus, undefined, client)
+      : res;
+
+    await createAuditLog(userId, 'procurement_update_purchase_order', 'purchase_order', finalRes.id, {
+      from_status: previous,
+      to_status: finalRes.status,
+      items_updated: body.items?.length ?? 0,
+    });
+
+    return finalRes;
+  });
+
+  try {
+    if (nextStatus !== previous) {
+      const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+      await orchestrator.onStatusChanged(updated, previous, nextStatus, language);
+    }
+  } catch (e) {
+    console.error('Notification error on procurementUpdate:', e);
+  }
+
+  return updated;
+};
+
+export const returnToManagerForFinalReview = async (
+  id: string,
+  userId: string,
+  language: string = 'ar'
+): Promise<PurchaseOrderResponse> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+  if (po.status !== PurchaseOrderStatus.IN_PROGRESS && po.status !== PurchaseOrderStatus.PENDING_PROCUREMENT) {
+    throw new AppError('Invalid state for returning to manager', 400);
+  }
+
+  const previous = po.status;
+  const to = PurchaseOrderStatus.RETURNED_TO_MANAGER_REVIEW;
+
+  const updated = await withTx(async (client) => {
+    const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
+    await createAuditLog(userId, 'return_to_manager_for_final_review', 'purchase_order', res.id, { from_status: previous, to_status: to });
+    return res;
+  });
+
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updated, previous, to, language);
+  } catch (e) {
+    console.error('Notification error on returnToManagerForFinalReview:', e);
+  }
+
+  return updated;
+};
+
+export const managerFinalApprove = async (
+  id: string,
+  userId: string,
+  language: string = 'ar'
+): Promise<PurchaseOrderResponse> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+  if (po.status !== PurchaseOrderStatus.RETURNED_TO_MANAGER_REVIEW) {
+    throw new AppError('Invalid state for final approve', 400);
+  }
+
+  const previous = po.status;
+  const to = PurchaseOrderStatus.COMPLETED;
+
+  const updated = await withTx(async (client) => {
+    const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
+    await createAuditLog(userId, 'manager_final_approve_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to });
+    return res;
+  });
+
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updated, previous, to, language);
+  } catch (e) {
+    console.error('Notification error on managerFinalApprove:', e);
+  }
+
+  return updated;
+};
+
+export const managerFinalReject = async (
+  id: string,
+  userId: string,
+  reason?: string,
+  language: string = 'ar'
+): Promise<PurchaseOrderResponse> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+  if (po.status !== PurchaseOrderStatus.RETURNED_TO_MANAGER_REVIEW) {
+    throw new AppError('Invalid state for final reject', 400);
+  }
+
+  const previous = po.status;
+  const to = PurchaseOrderStatus.REJECTED_BY_MANAGER;
+
+  const updated = await withTx(async (client) => {
+    const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, { notesAppend: reason }, client);
+    await createAuditLog(userId, 'manager_final_reject_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to, reason });
+    return res;
+  });
+
+  try {
+    const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
+    await orchestrator.onStatusChanged(updated, previous, to, language);
+  } catch (e) {
+    console.error('Notification error on managerFinalReject:', e);
+  }
+
+  return updated;
+};

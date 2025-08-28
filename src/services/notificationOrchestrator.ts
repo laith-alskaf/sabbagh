@@ -70,6 +70,31 @@ export class NotificationOrchestrator {
         }, po);
         break;
 
+      case PurchaseOrderStatus.UNDER_FINANCE_REVIEW: {
+        title = tl(language, 'notifications.purchaseOrder.sentToFinance', { number: po.number });
+        const financeIds = await userRepo.getUserIdsByRoles([UserRole.FINANCE_MANAGER]);
+        await this.sendAndPersist(financeIds, { type: 'po_created', title, body: '', data }, po);
+        break;
+      }
+      case PurchaseOrderStatus.UNDER_GENERAL_MANAGER_REVIEW: {
+        title = tl(language, 'notifications.purchaseOrder.sentToGeneralManager', { number: po.number });
+        const gmIds = await userRepo.getUserIdsByRoles([UserRole.GENERAL_MANAGER]);
+        await this.sendAndPersist(gmIds, { type: 'po_created', title, body: '', data }, po);
+        break;
+      }
+      case PurchaseOrderStatus.PENDING_PROCUREMENT: {
+        title = tl(language, 'notifications.purchaseOrder.sentToProcurement', { number: po.number });
+        const procIds = await userRepo.getUserIdsByRoles([UserRole.PROCUREMENT_OFFICER]);
+        await this.sendAndPersist(procIds, { type: 'po_created', title, body: '', data }, po);
+        break;
+      }
+      case PurchaseOrderStatus.RETURNED_TO_MANAGER_REVIEW: {
+        title = tl(language, 'notifications.purchaseOrder.returnedToManager', { number: po.number });
+        const mgrIds = await userRepo.getUserIdsByRoles([UserRole.MANAGER]);
+        await this.sendAndPersist(mgrIds, { type: 'po_status_changed', title, body: '', data }, po);
+        break;
+      }
+
       case PurchaseOrderStatus.IN_PROGRESS:
         type = 'po_approved';
         title = tl(language, 'notifications.purchaseOrder.approved', { number: po.number });
@@ -83,6 +108,16 @@ export class NotificationOrchestrator {
       case PurchaseOrderStatus.REJECTED_BY_MANAGER:
         type = 'po_rejected';
         title = tl(language, 'notifications.purchaseOrder.rejectedByManager', { number: po.number });
+        body = '';
+        break;
+      case PurchaseOrderStatus.REJECTED_BY_FINANCE:
+        type = 'po_rejected';
+        title = tl(language, 'notifications.purchaseOrder.rejectedByFinance', { number: po.number });
+        body = '';
+        break;
+      case PurchaseOrderStatus.REJECTED_BY_GENERAL_MANAGER:
+        type = 'po_rejected';
+        title = tl(language, 'notifications.purchaseOrder.rejectedByGeneralManager', { number: po.number });
         body = '';
         break;
       case PurchaseOrderStatus.COMPLETED:

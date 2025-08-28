@@ -11,7 +11,9 @@ import {
   rejectPurchaseOrderSchema,
   completePurchaseOrderSchema,
   purchaseOrderIdSchema,
-  purchaseOrderQuerySchema
+  purchaseOrderQuerySchema,
+  managerRouteSchema,
+  procurementUpdateSchema,
 } from '../validators/purchaseOrderValidators';
 
 const router = Router();
@@ -976,6 +978,80 @@ router.patch(
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
+// Route purchase order to Finance, GM, or Procurement (by Manager or Assistant)
+router.patch(
+  '/:id/route',
+  authorizeRoles([UserRole.MANAGER, UserRole.ASSISTANT_MANAGER]),
+  validateParams(purchaseOrderIdSchema),
+  validate(managerRouteSchema),
+  purchaseOrderController.routePurchaseOrder
+);
+
+// Finance approve/reject
+router.patch(
+  '/:id/finance-approve',
+  authorizeRoles([UserRole.FINANCE_MANAGER]),
+  validateParams(purchaseOrderIdSchema),
+  validate(approvePurchaseOrderSchema),
+  purchaseOrderController.financeApprove
+);
+router.patch(
+  '/:id/finance-reject',
+  authorizeRoles([UserRole.FINANCE_MANAGER]),
+  validateParams(purchaseOrderIdSchema),
+  validate(rejectPurchaseOrderSchema),
+  purchaseOrderController.financeReject
+);
+
+// General manager approve/reject
+router.patch(
+  '/:id/gm-approve',
+  authorizeRoles([UserRole.GENERAL_MANAGER]),
+  validateParams(purchaseOrderIdSchema),
+  validate(approvePurchaseOrderSchema),
+  purchaseOrderController.generalManagerApprove
+);
+router.patch(
+  '/:id/gm-reject',
+  authorizeRoles([UserRole.GENERAL_MANAGER]),
+  validateParams(purchaseOrderIdSchema),
+  validate(rejectPurchaseOrderSchema),
+  purchaseOrderController.generalManagerReject
+);
+
+// Procurement update
+router.patch(
+  '/:id/procurement-update',
+  authorizeRoles([UserRole.PROCUREMENT_OFFICER]),
+  validateParams(purchaseOrderIdSchema),
+  validate(procurementUpdateSchema),
+  purchaseOrderController.procurementUpdate
+);
+
+// Return to manager for final review
+router.patch(
+  '/:id/return-to-manager',
+  authorizeRoles([UserRole.PROCUREMENT_OFFICER]),
+  validateParams(purchaseOrderIdSchema),
+  purchaseOrderController.returnToManagerForFinalReview
+);
+
+// Manager final approve/reject
+router.patch(
+  '/:id/manager-final-approve',
+  authorizeRoles([UserRole.MANAGER]),
+  validateParams(purchaseOrderIdSchema),
+  validate(approvePurchaseOrderSchema),
+  purchaseOrderController.managerFinalApprove
+);
+router.patch(
+  '/:id/manager-final-reject',
+  authorizeRoles([UserRole.MANAGER]),
+  validateParams(purchaseOrderIdSchema),
+  validate(rejectPurchaseOrderSchema),
+  purchaseOrderController.managerFinalReject
+);
+
 router.patch(
   '/:id/complete',
   authorizeRoles([UserRole.MANAGER, UserRole.ASSISTANT_MANAGER]),

@@ -4,6 +4,9 @@ export enum UserRole {
   ASSISTANT_MANAGER = 'assistant_manager',
   EMPLOYEE = 'employee',
   GUEST = 'guest',
+  GENERAL_MANAGER = 'general_manager',
+  FINANCE_MANAGER = 'finance_manager',
+  PROCUREMENT_OFFICER = 'procurement_officer',
 }
 
 export interface User {
@@ -64,6 +67,12 @@ export enum RequestType {
 
 export enum PurchaseOrderStatus {
   DRAFT = 'draft',
+  UNDER_FINANCE_REVIEW='under_finance_review',
+  REJECTED_BY_FINANCE = 'rejected_by_finance',
+  UNDER_GENERAL_MANAGER_REVIEW='under_general_manager_review',
+  REJECTED_BY_GENERAL_MANAGER='rejected_by_general_manager',
+  PENDING_PROCUREMENT='pending_procurement',
+  RETURNED_TO_MANAGER_REVIEW='returned_to_manager_review',
   UNDER_ASSISTANT_REVIEW = 'under_assistant_review',
   REJECTED_BY_ASSISTANT = 'rejected_by_assistant',
   UNDER_MANAGER_REVIEW = 'under_manager_review',
@@ -73,7 +82,7 @@ export enum PurchaseOrderStatus {
 }
 
 export enum Currency {
-  SYP = 'SYP',
+  SYR = 'SYR',
   USD = 'USD',
 }
 

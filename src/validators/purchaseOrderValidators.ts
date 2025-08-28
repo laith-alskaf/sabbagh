@@ -64,6 +64,25 @@ export const completePurchaseOrderSchema = z.object({
   notes: z.string().optional(),
 });
 
+// Manager/Assistant routing schema (to finance, gm, or procurement)
+export const managerRouteSchema = z.object({
+  next: z.enum(['finance', 'gm', 'procurement'], { message: 'Invalid next route' }),
+  notes: z.string().optional(),
+});
+
+// Procurement update schema: only execution-related fields
+const procurementItemUpdateSchema = z.object({
+  id: z.string().optional(), // item id in the order items table
+  received_quantity: z.number().nullable().optional(),
+  price: z.number().nonnegative().nullable().optional(),
+  line_total: z.number().nonnegative().nullable().optional(),
+});
+
+export const procurementUpdateSchema = z.object({
+  attachment_url: z.string().nullable().optional(),
+  items: z.array(procurementItemUpdateSchema).min(1, { message: 'At least one item is required' }),
+});
+
 // Purchase order ID parameter schema
 export const purchaseOrderIdSchema = z.object({
   id: z.string().uuid({ message: 'Invalid purchase order ID format' }),

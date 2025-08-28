@@ -416,7 +416,7 @@ export const completePurchaseOrder = asyncHandler(async (req: Request, res: Resp
   }
 
   // Only managers can mark purchase orders as completed
-  if (req.user.role !== UserRole.MANAGER) {
+  if (req.user.role !== UserRole.MANAGER && req.user.role !== UserRole.ASSISTANT_MANAGER) {
     throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
   }
 
@@ -442,4 +442,84 @@ export const completePurchaseOrder = asyncHandler(async (req: Request, res: Resp
       500
     );
   }
+});
+
+// Route purchase order to Finance, GM, or Procurement
+export const routePurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  if (req.user.role !== UserRole.MANAGER && req.user.role !== UserRole.ASSISTANT_MANAGER) {
+    throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  }
+  const { id } = req.params;
+  const { next, notes } = req.body as { next: 'finance' | 'gm' | 'procurement'; notes?: string };
+
+  const po = await purchaseOrderService.routePurchaseOrder(id, req.user.userId, req.user.role as UserRole, next, notes, req.language || 'ar');
+  res.status(200).json({ success: true, data: po });
+});
+
+// Finance approve/reject
+export const financeApprove = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  if (req.user.role !== UserRole.FINANCE_MANAGER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  const { id } = req.params;
+  const po = await purchaseOrderService.financeApprove(id, req.user.userId, req.language || 'ar');
+  res.status(200).json({ success: true, data: po });
+});
+
+export const financeReject = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  if (req.user.role !== UserRole.FINANCE_MANAGER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  const { id } = req.params; const { reason } = req.body;
+  const po = await purchaseOrderService.financeReject(id, req.user.userId, reason, req.language || 'ar');
+  res.status(200).json({ success: true, data: po });
+});
+
+// General manager approve/reject
+export const generalManagerApprove = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  if (req.user.role !== UserRole.GENERAL_MANAGER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  const { id } = req.params;
+  const po = await purchaseOrderService.generalManagerApprove(id, req.user.userId, req.language || 'ar');
+  res.status(200).json({ success: true, data: po });
+});
+
+export const generalManagerReject = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  if (req.user.role !== UserRole.GENERAL_MANAGER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  const { id } = req.params; const { reason } = req.body;
+  const po = await purchaseOrderService.generalManagerReject(id, req.user.userId, reason, req.language || 'ar');
+  res.status(200).json({ success: true, data: po });
+});
+
+// Procurement update and return
+export const procurementUpdate = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  if (req.user.role !== UserRole.PROCUREMENT_OFFICER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  const { id } = req.params; const body = req.body as any;
+  const po = await purchaseOrderService.procurementUpdate(id, req.user.userId, body, req.language || 'ar');
+  res.status(200).json({ success: true, data: po });
+});
+
+export const returnToManagerForFinalReview = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  if (req.user.role !== UserRole.PROCUREMENT_OFFICER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  const { id } = req.params;
+  const po = await purchaseOrderService.returnToManagerForFinalReview(id, req.user.userId, req.language || 'ar');
+  res.status(200).json({ success: true, data: po });
+});
+
+export const managerFinalApprove = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  if (req.user.role !== UserRole.MANAGER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  const { id } = req.params;
+  const po = await purchaseOrderService.managerFinalApprove(id, req.user.userId, req.language || 'ar');
+  res.status(200).json({ success: true, data: po });
+});
+
+export const managerFinalReject = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  if (req.user.role !== UserRole.MANAGER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  const { id } = req.params; const { reason } = req.body;
+  const po = await purchaseOrderService.managerFinalReject(id, req.user.userId, reason, req.language || 'ar');
+  res.status(200).json({ success: true, data: po });
 });
