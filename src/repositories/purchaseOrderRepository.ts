@@ -15,7 +15,6 @@ export async function countForMonth(year: number, month: number): Promise<number
 export async function list(params: {
   userId?: string;
   employeeOnly?: boolean;
-  role?: UserRole | null;
   status?: PurchaseOrderStatus;
   supplier_id?: string;
   department?: string;
@@ -27,7 +26,6 @@ export async function list(params: {
   const conds: string[] = [];
   const vals: any[] = [];
   if (params.employeeOnly && params.userId) { vals.push(params.userId); conds.push(`po.created_by = $${vals.length}`); }
-  if (params.role != null) { vals.push(params.role); conds.push(`po.role = $${vals.length}`); }
   if (params.status) { vals.push(params.status); conds.push(`po.status = $${vals.length}`); }
   if (params.supplier_id) { vals.push(params.supplier_id); conds.push(`po.supplier_id = $${vals.length}`); }
   if (params.department) { vals.push(params.department); conds.push(`po.department = $${vals.length}`); }

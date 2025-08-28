@@ -91,11 +91,17 @@ export const getPurchaseOrders = async (
   if (userRole === UserRole.EMPLOYEE || userRole === UserRole.FINANCE_MANAGER || userRole === UserRole.GENERAL_MANAGER || userRole === UserRole.PROCUREMENT_OFFICER) {
     where.created_by = userId;
   }
-  if (userRole === UserRole.FINANCE_MANAGER || userRole === UserRole.GENERAL_MANAGER || userRole === UserRole.PROCUREMENT_OFFICER) {
-    role = userRole;
+  if (userRole === UserRole.FINANCE_MANAGER) {
+    status = PurchaseOrderStatus.UNDER_FINANCE_REVIEW
+  }
+  if (userRole === UserRole.GENERAL_MANAGER) {
+    status = PurchaseOrderStatus.UNDER_GENERAL_MANAGER_REVIEW
+  }
+  if (userRole === UserRole.PROCUREMENT_OFFICER) {
+    status = PurchaseOrderStatus.PENDING_PROCUREMENT;
   }
   if (status) {
-    where.status = status;
+    status = status;
   }
 
   if (supplier_id) {
@@ -124,7 +130,6 @@ export const getPurchaseOrders = async (
   const purchaseOrders = await poRepo.list({
     userId,
     employeeOnly: true,
-    role: role,
     status,
     supplier_id,
     department,
