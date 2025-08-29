@@ -16,7 +16,7 @@ const router = Router();
 
 // Apply authentication and manager authorization to all routes
 router.use(authenticateJWT);
-router.use(authorizeRoles([UserRole.MANAGER]));
+router.use(authorizeRoles([UserRole.MANAGER,UserRole.GENERAL_MANAGER]));
 
 /**
  * @swagger

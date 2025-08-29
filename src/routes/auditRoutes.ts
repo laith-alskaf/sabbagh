@@ -167,5 +167,4 @@ router.use(authenticateJWT);
  *         $ref: '#/components/responses/ServerError'
  */
 router.get('/', authorizeRoles([UserRole.GENERAL_MANAGER, UserRole.MANAGER, UserRole.ASSISTANT_MANAGER]), validateQuery(auditQuerySchema), auditController.getAuditLogs);
-
 export default router;

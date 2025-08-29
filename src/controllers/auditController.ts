@@ -34,3 +34,4 @@ export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => 
     data: auditLogs,
   });
 });
+

@@ -114,3 +114,30 @@ export const getAuditLogs = async (
     created_at: row.created_at,
   }));
 };
+
+/**
+ * Delete single audit log by id
+ */
+export const deleteAuditLogById = async (id: string): Promise<number> => {
+  const sql = `delete from audit_logs where id = $1`;
+  const { rowCount } = await pool.query(sql, [id]);
+  return rowCount ?? 0;
+};
+
+/**
+ * Delete ALL audit logs (careful). Wrapped in transaction for safety.
+ */
+export const clearAllAuditLogs = async (): Promise<number> => {
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    const res = await client.query('delete from audit_logs');
+    await client.query('commit');
+    return res.rowCount ?? 0;
+  } catch (e) {
+    await client.query('rollback');
+    throw e;
+  } finally {
+    client.release();
+  }
+};
