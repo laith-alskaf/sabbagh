@@ -981,7 +981,7 @@ router.patch(
 // Route purchase order to Finance, GM, or Procurement (by Manager or Assistant)
 router.patch(
   '/:id/route',
-  authorizeRoles([UserRole.MANAGER, UserRole.ASSISTANT_MANAGER]),
+  authorizeRoles([UserRole.MANAGER]),
   validateParams(purchaseOrderIdSchema),
   validate(managerRouteSchema),
   purchaseOrderController.routePurchaseOrder

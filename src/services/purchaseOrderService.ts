@@ -642,10 +642,9 @@ export const routePurchaseOrder = async (
   const po = await poRepo.getById(id);
   if (!po) throw new Error('Purchase order not found');
 
-  // Assistant can route when it's under assistant review; Manager when under manager review
-  const canAssistant = userRole === UserRole.ASSISTANT_MANAGER && po.status === PurchaseOrderStatus.UNDER_ASSISTANT_REVIEW;
+  // Manager can route when under manager review
   const canManager = userRole === UserRole.MANAGER && po.status === PurchaseOrderStatus.UNDER_MANAGER_REVIEW;
-  if (!canAssistant && !canManager) {
+  if (!canManager) {
     throw new AppError('Invalid state for routing', 400);
   }
 
