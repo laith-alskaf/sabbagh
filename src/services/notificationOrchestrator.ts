@@ -44,7 +44,8 @@ export class NotificationOrchestrator {
 
   async onStatusChanged(po: PurchaseOrderResponse, previous: PurchaseOrderStatus, next: PurchaseOrderStatus, language: string = 'ar'): Promise<void> {
     // Notify creator on any status change, with friendly messages
-    const toUserIds = [po.created_by];
+    const roleIds = await userRepo.getUserIdsByRoles([UserRole.MANAGER]);
+    const toUserIds = [po.created_by,...roleIds];
     const data = buildPONotificationData(po);
 
     let type = 'po_status_changed';

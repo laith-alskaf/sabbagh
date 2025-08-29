@@ -511,7 +511,7 @@ export const managerApprove = async (
   const updatedPurchaseOrder = await withTx(async (client) => {
     const updated = await (await import('../repositories/purchaseOrderMutations')).updateStatus(
       id,
-      PurchaseOrderStatus.IN_PROGRESS,
+      PurchaseOrderStatus.COMPLETED,
       undefined,
       client
     );
@@ -694,7 +694,7 @@ export const financeApprove = async (
   if (po.status !== PurchaseOrderStatus.UNDER_FINANCE_REVIEW) throw new AppError('Not under finance review', 400);
 
   const previous = po.status;
-  const to = PurchaseOrderStatus.PENDING_PROCUREMENT;
+  const to = PurchaseOrderStatus.UNDER_MANAGER_REVIEW;
 
   const updated = await withTx(async (client) => {
     const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
@@ -703,8 +703,10 @@ export const financeApprove = async (
   });
 
   try {
+
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
     await orchestrator.onStatusChanged(updated, previous, to, language);
+
   } catch (e) {
     console.error('Notification error on financeApprove:', e);
   }
@@ -754,7 +756,7 @@ export const generalManagerApprove = async (
   if (po.status !== PurchaseOrderStatus.UNDER_GENERAL_MANAGER_REVIEW) throw new AppError('Not under general manager review', 400);
 
   const previous = po.status;
-  const to = PurchaseOrderStatus.PENDING_PROCUREMENT;
+  const to = PurchaseOrderStatus.UNDER_MANAGER_REVIEW;
 
   const updated = await withTx(async (client) => {
     const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
@@ -840,7 +842,7 @@ export const procurementUpdate = async (
   });
 
   const previous = po.status;
-  const nextStatus = po.status === PurchaseOrderStatus.PENDING_PROCUREMENT ? PurchaseOrderStatus.IN_PROGRESS : po.status;
+  const nextStatus = po.status === PurchaseOrderStatus.PENDING_PROCUREMENT ? PurchaseOrderStatus.UNDER_MANAGER_REVIEW : po.status;
 
   const updated = await withTx(async (client) => {
     // Update attachment and items using existing draft updater (works for core fields)
