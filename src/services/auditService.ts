@@ -55,6 +55,7 @@ export const getAuditLogs = async (
   entityType?: string,
   entityId?: string,
   actorId?: string,
+  action?: string,
   limit = 50,
   offset = 0
 ): Promise<AuditLogResponse[]> => {
@@ -64,6 +65,10 @@ export const getAuditLogs = async (
   if (entityType) {
     params.push(entityType);
     conditions.push(`al.entity_type = $${params.length}`);
+  }
+    if (action) {
+    params.push(action);
+    conditions.push(`al.action = $${params.length}`);
   }
 
   if (entityId) {

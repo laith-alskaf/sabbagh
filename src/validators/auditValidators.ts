@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const auditQuerySchema = z.object({
   page: z.string().optional().transform((val) => val ? parseInt(val, 10) : 1),
   limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 20),
-  action: z.enum(['create', 'update', 'delete', 'login', 'logout', 'approve', 'reject', 'submit']).optional(),
+  action: z.enum(['create', 'update', 'delete', 'approve', 'reject', 'submit']).optional(),
   entity_type: z.enum(['user', 'vendor', 'item', 'purchase_order', 'change_request']).optional(),
   entity_id: z.string().uuid().optional(),
   actor_id: z.string().uuid().optional(),

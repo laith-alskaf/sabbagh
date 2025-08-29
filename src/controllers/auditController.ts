@@ -18,12 +18,13 @@ export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => 
     throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
   }
 
-  const { entity_type, entity_id, actor_id, limit, offset } = req.query;
+  const { entity_type, entity_id, actor_id, limit, offset, action,start_date,end_date } = req.query;
 
   const auditLogs = await auditService.getAuditLogs(
     entity_type as string,
     entity_id as string,
     actor_id as string,
+    action as string,
     limit ? parseInt(limit as string) : undefined,
     offset ? parseInt(offset as string) : undefined
   );
