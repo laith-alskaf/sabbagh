@@ -7,6 +7,7 @@ export enum UserRole {
   GENERAL_MANAGER = 'general_manager',
   FINANCE_MANAGER = 'finance_manager',
   PROCUREMENT_OFFICER = 'procurement_officer',
+  AUDITOR = 'auditor',
 }
 
 export interface User {

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as purchaseOrderController from '../controllers/purchaseOrderController';
+import * as purchaseOrderNotesController from '../controllers/purchaseOrderNotesController';
 import { authenticateJWT, authorizeRoles } from '../middlewares/authMiddleware';
 import { UserRole } from '../types/models';
 import { validate, validateParams, validateQuery } from '../validators';
@@ -15,6 +16,7 @@ import {
   managerRouteSchema,
   procurementUpdateSchema,
 } from '../validators/purchaseOrderValidators';
+import { createPurchaseOrderNoteSchema } from '../validators/notesValidators';
 
 const router = Router();
 
@@ -27,6 +29,12 @@ const router = Router();
 
 // Apply authentication middleware to all routes
 router.use(authenticateJWT);
+
+/**
+ * Notes Endpoints
+ */
+router.post('/:id/notes', validateParams(purchaseOrderIdSchema), validate(createPurchaseOrderNoteSchema), purchaseOrderNotesController.addNote);
+router.get('/:id/notes', validateParams(purchaseOrderIdSchema), purchaseOrderNotesController.getNotes);
 
 
 
