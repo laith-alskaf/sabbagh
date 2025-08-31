@@ -207,7 +207,7 @@ export const createPurchaseOrder = async (
 
   if (userRole === UserRole.MANAGER) {
     // Managers can create purchase orders directly in progress
-    initialStatus = PurchaseOrderStatus.IN_PROGRESS;
+    initialStatus = PurchaseOrderStatus.UNDER_MANAGER_REVIEW;
   } else if (userRole === UserRole.ASSISTANT_MANAGER) {
     // Assistant managers' orders go to manager review
     initialStatus = PurchaseOrderStatus.UNDER_MANAGER_REVIEW;
