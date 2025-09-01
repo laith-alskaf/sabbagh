@@ -11,7 +11,7 @@ export async function upsertToken({ userId, token, deviceInfo }: UpsertTokenInpu
     `INSERT INTO user_fcm_tokens (user_id, token, device_info, last_used_at)
      VALUES ($1, $2, $3, NOW())
      ON CONFLICT (user_id)
-     DO UPDATE SET device_info = EXCLUDED.device_info, last_used_at = NOW(), updated_at = NOW()`,
+     DO UPDATE SET token = EXCLUDED.token, device_info = EXCLUDED.device_info, last_used_at = NOW(), updated_at = NOW()`,
     [userId, token, deviceInfo ?? null]
   );
 }
