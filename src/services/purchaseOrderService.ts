@@ -200,7 +200,8 @@ export const createPurchaseOrder = async (
   req: Request,
   data: CreatePurchaseOrderRequest,
   userId: string,
-  userRole: UserRole
+  userRole: UserRole,
+  language: string = 'ar'
 ): Promise<PurchaseOrderResponse> => {
   // Generate a unique purchase order number
   const number = await generatePurchaseOrderNumber();
@@ -381,7 +382,8 @@ export const updatePurchaseOrder = async (
 export const submitPurchaseOrder = async (
   id: string,
   userId: string,
-  userRole: UserRole
+  userRole: UserRole,
+  language: string = 'ar'
 ): Promise<PurchaseOrderResponse> => {
   // Get the purchase order
   const purchaseOrder = await poRepo.getById(id);
@@ -438,7 +440,9 @@ export const submitPurchaseOrder = async (
  */
 export const assistantApprove = async (
   id: string,
-  userId: string
+  userId: string,
+  language: string = 'ar'
+
 ): Promise<PurchaseOrderResponse> => {
   // Get the purchase order
   const purchaseOrder = await poRepo.getById(id);
@@ -483,7 +487,8 @@ export const assistantApprove = async (
 export const assistantReject = async (
   id: string,
   userId: string,
-  reason?: string
+  reason?: string,
+  language: string = 'ar'
 ): Promise<PurchaseOrderResponse> => {
   // Get the purchase order
   const purchaseOrder = await poRepo.getById(id);
@@ -527,7 +532,8 @@ export const assistantReject = async (
  */
 export const managerApprove = async (
   id: string,
-  userId: string
+  userId: string,
+  language: string = 'ar'
 ): Promise<PurchaseOrderResponse> => {
   // Get the purchase order
   const purchaseOrder = await poRepo.getById(id);
@@ -572,7 +578,8 @@ export const managerApprove = async (
 export const managerReject = async (
   id: string,
   userId: string,
-  reason?: string
+  reason?: string,
+  language: string = 'ar'
 ): Promise<PurchaseOrderResponse> => {
   // Get the purchase order
   const purchaseOrder = await poRepo.getById(id);
@@ -617,7 +624,8 @@ export const managerReject = async (
  */
 export const completePurchaseOrder = async (
   id: string,
-  userId: string
+  userId: string,
+  language: string = 'ar'
 ): Promise<PurchaseOrderResponse> => {
   const purchaseOrder = await poRepo.getById(id);
   if (!purchaseOrder) throw new Error('Purchase order not found');

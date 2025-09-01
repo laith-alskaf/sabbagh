@@ -170,7 +170,8 @@ export const createPurchaseOrder = asyncHandler(async (req: Request, res: Respon
     req,
     purchaseOrderData,
     req.user.userId,
-    req.user.role as UserRole
+    req.user.role as UserRole,
+    req.language || 'ar'
   );
 
   res.status(201).json({
@@ -233,7 +234,8 @@ export const submitPurchaseOrder = asyncHandler(async (req: Request, res: Respon
     const purchaseOrder = await purchaseOrderService.submitPurchaseOrder(
       id,
       req.user.userId,
-      req.user.role as UserRole
+      req.user.role as UserRole,
+      req.language || 'ar'
     );
 
     res.status(200).json({
@@ -271,7 +273,8 @@ export const assistantApprove = asyncHandler(async (req: Request, res: Response)
   try {
     const purchaseOrder = await purchaseOrderService.assistantApprove(
       id,
-      req.user.userId
+      req.user.userId,
+      req.language || 'ar'
     );
 
     res.status(200).json({
@@ -311,7 +314,8 @@ export const assistantReject = asyncHandler(async (req: Request, res: Response) 
     const purchaseOrder = await purchaseOrderService.assistantReject(
       id,
       req.user.userId,
-      reason
+      reason,
+      req.language || 'ar'
     );
 
     res.status(200).json({
@@ -349,7 +353,8 @@ export const managerApprove = asyncHandler(async (req: Request, res: Response) =
   try {
     const purchaseOrder = await purchaseOrderService.managerApprove(
       id,
-      req.user.userId
+      req.user.userId,
+      req.language || 'ar'
     );
 
     res.status(200).json({
@@ -389,7 +394,8 @@ export const managerReject = asyncHandler(async (req: Request, res: Response) =>
     const purchaseOrder = await purchaseOrderService.managerReject(
       id,
       req.user.userId,
-      reason
+      reason,
+      req.language || 'ar'
     );
 
     res.status(200).json({
@@ -427,7 +433,8 @@ export const completePurchaseOrder = asyncHandler(async (req: Request, res: Resp
   try {
     const purchaseOrder = await purchaseOrderService.completePurchaseOrder(
       id,
-      req.user.userId
+      req.user.userId,
+      req.language || 'ar'
     );
 
     res.status(200).json({
@@ -498,7 +505,7 @@ export const procurementUpdate = asyncHandler(async (req: Request, res: Response
   if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
   if (req.user.role !== UserRole.PROCUREMENT_OFFICER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
   const { id } = req.params; const body = req.body as any;
-  const po = await purchaseOrderService.procurementUpdate(  req,id, req.user.userId, body, req.language || 'ar');
+  const po = await purchaseOrderService.procurementUpdate(req, id, req.user.userId, body, req.language || 'ar');
   res.status(200).json({ success: true, data: po });
 });
 

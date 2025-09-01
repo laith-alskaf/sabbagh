@@ -44,8 +44,8 @@ export class NotificationOrchestrator {
 
   async onStatusChanged(po: PurchaseOrderResponse, previous: PurchaseOrderStatus, next: PurchaseOrderStatus, language: string = 'ar'): Promise<void> {
     // Notify creator on any status change, with friendly messages
-    const roleIds = await userRepo.getUserIdsByRoles([UserRole.MANAGER]);
-    const toUserIds = [po.created_by,...roleIds];
+
+    let toUserIds: string[] = [po.created_by];
     const data = buildPONotificationData(po);
 
     let type = 'po_status_changed';
@@ -102,21 +102,28 @@ export class NotificationOrchestrator {
         body = tl(language, 'notifications.purchaseOrder.approvedBody');
         break;
       case PurchaseOrderStatus.REJECTED_BY_ASSISTANT:
+        const roleIdss = await userRepo.getUserIdsByRoles([UserRole.MANAGER]);
+        toUserIds = [...toUserIds, ...roleIdss];
         type = 'po_rejected';
         title = tl(language, 'notifications.purchaseOrder.rejectedByAssistant', { number: po.number });
         body = '';
         break;
       case PurchaseOrderStatus.REJECTED_BY_MANAGER:
+
         type = 'po_rejected';
         title = tl(language, 'notifications.purchaseOrder.rejectedByManager', { number: po.number });
         body = '';
         break;
       case PurchaseOrderStatus.REJECTED_BY_FINANCE:
+        const roleIdsss = await userRepo.getUserIdsByRoles([UserRole.MANAGER]);
+        toUserIds = [...toUserIds, ...roleIdsss];
         type = 'po_rejected';
         title = tl(language, 'notifications.purchaseOrder.rejectedByFinance', { number: po.number });
         body = '';
         break;
       case PurchaseOrderStatus.REJECTED_BY_GENERAL_MANAGER:
+        const roleId = await userRepo.getUserIdsByRoles([UserRole.MANAGER]);
+        toUserIds = [...toUserIds, ...roleId];
         type = 'po_rejected';
         title = tl(language, 'notifications.purchaseOrder.rejectedByGeneralManager', { number: po.number });
         body = '';
