@@ -52,7 +52,7 @@ export interface PurchaseOrderResponse {
   supplier_id: string | null;
   supplier_name?: string | null;
   execution_date: Date | null;
-  attachment_url: string | null;
+  attachment_url: string[] | null;
   total_amount: number | null;
   currency: Currency;
   created_by: string;

@@ -392,7 +392,7 @@ router.post('/',
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.put('/:id', validateParams(purchaseOrderIdSchema), validate(updatePurchaseOrderSchema), purchaseOrderController.updatePurchaseOrder);
+router.put('/:id',upload.array('images'),  validateParams(purchaseOrderIdSchema), validate(updatePurchaseOrderSchema), purchaseOrderController.updatePurchaseOrder);
 
 /**
  * @swagger
@@ -1033,6 +1033,7 @@ router.patch(
 // Procurement update
 router.patch(
   '/:id/procurement-update',
+  upload.array('images'), 
   authorizeRoles([UserRole.PROCUREMENT_OFFICER]),
   validateParams(purchaseOrderIdSchema),
   validate(procurementUpdateSchema),

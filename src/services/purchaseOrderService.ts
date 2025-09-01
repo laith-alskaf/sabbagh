@@ -10,6 +10,7 @@ import { tl } from '../utils/i18n';
 import { handlerExtractImage } from '../utils/handle-extract-image';
 import { Request } from "express";
 import { CloudImageService } from './cloud-image.service';
+import { string } from 'zod';
 /**
  * Generate a unique purchase order number
  */
@@ -291,6 +292,7 @@ export const createPurchaseOrder = async (
  * Only draft purchase orders can be updated
  */
 export const updatePurchaseOrder = async (
+  req: Request,
   id: string,
   data: UpdatePurchaseOrderRequest,
   userId: string,
@@ -316,6 +318,22 @@ export const updatePurchaseOrder = async (
   ) {
     throw new AppError(tl(language, 'purchaseOrder.updateOnlyDraftOrInProgress', { ns: 'errors' }), 400);
   }
+
+
+  const uploudImageService = new CloudImageService();
+  var urlsImages = await handlerExtractImage({
+    req: req,
+    uuid: purchaseOrder.number,
+    folderName: 'purchase-orders',
+    userId: userId,
+    uploadToCloudinary: uploudImageService
+  });
+  if (urlsImages && urlsImages.length > 0) {
+    if (purchaseOrder.attachment_url && purchaseOrder.attachment_url.length > 0) {
+      urlsImages = urlsImages.concat(purchaseOrder.attachment_url);
+    }
+  }
+
   // Update the purchase order with items in a transaction
   const updatedPurchaseOrder = await withTx(async (client) => {
     const updated = await (await import('../repositories/purchaseOrderMutations')).updateDraft(
@@ -328,7 +346,7 @@ export const updatePurchaseOrder = async (
         notes: data.notes,
         supplier_id: data.supplier_id,
         execution_date: data.execution_date,
-        attachment_url: data.attachment_url,
+        attachment_url: urlsImages ?? purchaseOrder.attachment_url,
         total_amount: data.total_amount,
         currency: data.currency,
       },
@@ -817,9 +835,10 @@ export const generalManagerReject = async (
  * Procurement updates execution fields and optionally moves to IN_PROGRESS
  */
 export const procurementUpdate = async (
+  req: Request,
   id: string,
   userId: string,
-  body: { attachment_url?: string | null; items: Array<{ id?: string; received_quantity?: number | null; price?: number | null; line_total?: number | null; }> },
+  body: { items: Array<{ id?: string; received_quantity?: number | null; price?: number | null; line_total?: number | null; }> },
   language: string = 'ar'
 ): Promise<PurchaseOrderResponse> => {
   const po = await poRepo.getById(id);
@@ -828,6 +847,21 @@ export const procurementUpdate = async (
   if (po.status !== PurchaseOrderStatus.PENDING_PROCUREMENT && po.status !== PurchaseOrderStatus.IN_PROGRESS) {
     throw new AppError('Invalid state for procurement update', 400);
   }
+
+  const uploudImageService = new CloudImageService();
+  var urlsImages = await handlerExtractImage({
+    req: req,
+    uuid: po.number,
+    folderName: 'purchase-orders',
+    userId: userId,
+    uploadToCloudinary: uploudImageService
+  });
+  if (urlsImages && urlsImages.length > 0) {
+    if (po.attachment_url && po.attachment_url.length > 0) {
+      urlsImages = urlsImages.concat(po.attachment_url);
+    }
+  }
+
 
   // Merge item updates onto existing items
   const updatesById = new Map<string, { received_quantity?: number | null; price?: number | null; line_total?: number | null; }>();
@@ -858,7 +892,7 @@ export const procurementUpdate = async (
     // Update attachment and items using existing draft updater (works for core fields)
     const res = await (await import('../repositories/purchaseOrderMutations')).updateDraft(
       id,
-      { attachment_url: body.attachment_url ?? po.attachment_url } as any,
+      { attachment_url: urlsImages ?? po.attachment_url } as any,
       mergedItems,
       client
     );

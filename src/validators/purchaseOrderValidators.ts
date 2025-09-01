@@ -37,7 +37,6 @@ export const updatePurchaseOrderSchema = z.object({
   execution_date: z.string().or(z.date()).nullable().optional(),
   notes: z.string().nullable().optional(),
   supplier_id: z.string().nullable().optional(),
-  attachment_url: z.string().nullable().optional(),
   total_amount: z.number().nonnegative().nullable().optional(),
   currency: z.enum(['SYP', 'USD'], { message: 'Currency must be SYP or USD' }).optional(),
   items: z.array(purchaseOrderItemSchema).min(1, { message: 'At least one item is required' }).optional(),
@@ -78,7 +77,6 @@ const procurementItemUpdateSchema = z.object({
 });
 
 export const procurementUpdateSchema = z.object({
-  attachment_url: z.string().nullable().optional(),
   items: z.array(procurementItemUpdateSchema).min(1, { message: 'At least one item is required' }),
 });
 

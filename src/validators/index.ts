@@ -4,10 +4,47 @@ import { AppError } from '../middlewares/errorMiddleware';
 import { t } from '../utils/i18n';
 import { logError } from '../utils/logger';
 
+// Helper to parse JSON safely
+function tryParseJson(input: any): any {
+  if (typeof input !== 'string') return input;
+  const trimmed = input.trim();
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return input;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return input;
+  }
+}
+
+// Normalize multipart "payload" into req.body before validation
+function normalizeMultipartBody(req: Request): void {
+  const contentType = req.headers['content-type'] || '';
+  if (typeof contentType === 'string' && contentType.includes('multipart/form-data')) {
+    // If client sends JSON inside `payload`, parse it
+    if ((req as any).body && typeof (req as any).body.payload !== 'undefined') {
+      const parsed = tryParseJson((req as any).body.payload);
+      if (parsed && typeof parsed === 'object') {
+        req.body = parsed;
+      }
+    } else {
+      // Attempt to parse each string field if it looks like JSON
+      if (req.body && typeof req.body === 'object') {
+        const entries = Object.entries(req.body);
+        const normalized: Record<string, any> = {};
+        for (const [k, v] of entries) {
+          normalized[k] = tryParseJson(v as any);
+        }
+        req.body = normalized;
+      }
+    }
+  }
+}
+
 // Helper function to validate request data against a Zod schema
 export const validate = (schema: z.ZodType<any, any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
+      normalizeMultipartBody(req);
       const result = schema.parse(req.body);
       req.body = result; // Replace with validated data
       next();

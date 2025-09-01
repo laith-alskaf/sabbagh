@@ -44,7 +44,7 @@ export const getMyPurchaseOrders = asyncHandler(async (req: Request, res: Respon
     throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
   }
 
- const { status, supplier_id, department, start_date, end_date, limit, offset } = req.query;
+  const { status, supplier_id, department, start_date, end_date, limit, offset } = req.query;
 
   const purchaseOrders = await purchaseOrderService.getPurchaseOrders(
     req.user.userId,
@@ -194,6 +194,7 @@ export const updatePurchaseOrder = asyncHandler(async (req: Request, res: Respon
 
   try {
     const purchaseOrder = await purchaseOrderService.updatePurchaseOrder(
+      req,
       id,
       purchaseOrderData,
       req.user.userId,
@@ -497,7 +498,7 @@ export const procurementUpdate = asyncHandler(async (req: Request, res: Response
   if (!req.user) throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
   if (req.user.role !== UserRole.PROCUREMENT_OFFICER) throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
   const { id } = req.params; const body = req.body as any;
-  const po = await purchaseOrderService.procurementUpdate(id, req.user.userId, body, req.language || 'ar');
+  const po = await purchaseOrderService.procurementUpdate(  req,id, req.user.userId, body, req.language || 'ar');
   res.status(200).json({ success: true, data: po });
 });
 
