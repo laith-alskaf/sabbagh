@@ -315,7 +315,10 @@ export const updatePurchaseOrder = async (
   // Only draft and IN_PROGRESS purchase orders can be updated
   if (
     purchaseOrder.status !== PurchaseOrderStatus.DRAFT &&
-    purchaseOrder.status !== PurchaseOrderStatus.IN_PROGRESS
+    purchaseOrder.status !== PurchaseOrderStatus.IN_PROGRESS &&
+    purchaseOrder.status !== PurchaseOrderStatus.UNDER_ASSISTANT_REVIEW &&
+    purchaseOrder.status !== PurchaseOrderStatus.UNDER_MANAGER_REVIEW &&
+    purchaseOrder.status !== PurchaseOrderStatus.RETURNED_TO_MANAGER_REVIEW
   ) {
     throw new AppError(tl(language, 'purchaseOrder.updateOnlyDraftOrInProgress', { ns: 'errors' }), 400);
   }
