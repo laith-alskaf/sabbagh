@@ -7,8 +7,9 @@ import { withTx } from '../repositories/tx';
 import { NotificationOrchestrator } from './notificationOrchestrator';
 import { PurchaseOrderNotifier } from './notif-purchars_order_action';
 import { tl } from '../utils/i18n';
-import { string } from 'zod';
-
+import { handlerExtractImage } from '../utils/handle-extract-image';
+import { Request } from "express";
+import { CloudImageService } from './cloud-image.service';
 /**
  * Generate a unique purchase order number
  */
@@ -195,6 +196,7 @@ export const getPurchaseOrderById = async (
  * Create a purchase order
  */
 export const createPurchaseOrder = async (
+  req: Request,
   data: CreatePurchaseOrderRequest,
   userId: string,
   userRole: UserRole
@@ -215,12 +217,20 @@ export const createPurchaseOrder = async (
     // Employee orders go to assistant manager review
     initialStatus = PurchaseOrderStatus.UNDER_ASSISTANT_REVIEW;
   }
+  const uploudImageService = new CloudImageService();
+  const urlsImages = await handlerExtractImage({
+    req: req,
+    uuid: number,
+    folderName: 'purchase-orders',
+    userId: userId,
+    uploadToCloudinary: uploudImageService
+  });
+
 
   // Create the purchase order with items in a transaction
   const purchaseOrder = await withTx(async (client) => {
     const inserted = await poRepo.insert(
       {
-        // id: '', // ignored
         number,
         request_date: data.request_date,
         department: data.department,
@@ -230,7 +240,7 @@ export const createPurchaseOrder = async (
         notes: data.notes ?? '',
         supplier_id: data.supplier_id ?? null,
         execution_date: data.execution_date ?? null,
-        attachment_url: data.attachment_url ?? null,
+        attachment_url: urlsImages ?? null,
         total_amount: data.total_amount ?? null,
         currency: data.currency ?? null,
         created_by: userId,

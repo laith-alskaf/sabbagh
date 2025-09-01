@@ -167,6 +167,7 @@ export const createPurchaseOrder = asyncHandler(async (req: Request, res: Respon
   // }
 
   const purchaseOrder = await purchaseOrderService.createPurchaseOrder(
+    req,
     purchaseOrderData,
     req.user.userId,
     req.user.role as UserRole

@@ -17,9 +17,11 @@ import {
   procurementUpdateSchema,
 } from '../validators/purchaseOrderValidators';
 import { createPurchaseOrderNoteSchema } from '../validators/notesValidators';
+import multer from 'multer';
 
 const router = Router();
-
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 /**
  * @swagger
  * tags:
@@ -258,9 +260,10 @@ router.get('/:id', validateParams(purchaseOrderIdSchema), purchaseOrderControlle
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.post('/', validate(createPurchaseOrderSchema), purchaseOrderController.createPurchaseOrder);
+router.post('/',
+  upload.array('images'), validate(createPurchaseOrderSchema), purchaseOrderController.createPurchaseOrder);
 
-/**
+/** 
  * @swagger
  * /purchase-orders/{id}:
  *   put:
