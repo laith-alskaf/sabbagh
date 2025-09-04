@@ -328,7 +328,7 @@ export const createPurchaseOrder = async (
       userId,
       'create_purchase_order',
       'purchase_order',
-      inserted.id,
+      inserted.number,
       {
         purchase_order: { id: inserted.id, number: inserted.number, status: inserted.status },
         items_count: inserted.items.length,
@@ -423,7 +423,7 @@ export const updatePurchaseOrder = async (
       userId,
       'update_purchase_order',
       'purchase_order',
-      updated.id,
+      purchaseOrder.number,
       {
         purchase_order: { id: updated.id, number: updated.number, status: updated.status },
         items_count: updated.items.length,
@@ -481,7 +481,7 @@ export const submitPurchaseOrder = async (
       userId,
       'submit_purchase_order',
       'purchase_order',
-      updated.id,
+      purchaseOrder.number,
       { purchase_order: { id: updated.id, number: updated.number, status: updated.status } }
     );
 
@@ -527,7 +527,7 @@ export const assistantApprove = async (
       userId,
       'assistant_approve_purchase_order',
       'purchase_order',
-      updated.id,
+      updated.number,
       { purchase_order: { id: updated.id, number: updated.number, status: updated.status } }
     );
 
@@ -573,7 +573,7 @@ export const assistantReject = async (
       userId,
       'assistant_reject_purchase_order',
       'purchase_order',
-      updated.id,
+      updated.number,
       { purchase_order: { id: updated.id, number: updated.number, status: updated.status }, reason }
     );
 
@@ -618,7 +618,7 @@ export const managerApprove = async (
       userId,
       'manager_approve_purchase_order',
       'purchase_order',
-      updated.id,
+      updated.number,
       { purchase_order: { id: updated.id, number: updated.number, status: updated.status } }
     );
 
@@ -664,7 +664,7 @@ export const managerReject = async (
       userId,
       'manager_reject_purchase_order',
       'purchase_order',
-      updated.id,
+      purchaseOrder.number,
       { purchase_order: { id: updated.id, number: updated.number, status: updated.status }, reason }
     );
 
@@ -710,7 +710,7 @@ export const completePurchaseOrder = async (
       userId,
       'complete_purchase_order',
       'purchase_order',
-      updated.id,
+      purchaseOrder.number,
       { purchase_order: { id: updated.id, number: updated.number, status: updated.status } }
     );
 
@@ -761,7 +761,7 @@ export const routePurchaseOrder = async (
       { notesAppend: notes },
       client
     );
-    await createAuditLog(userId, 'route_purchase_order', 'purchase_order', res.id, {
+    await createAuditLog(userId, 'route_purchase_order', 'purchase_order', po.number, {
       from_status: previous,
       to_status: to,
       next,
@@ -798,7 +798,7 @@ export const financeApprove = async (
 
   const updated = await withTx(async (client) => {
     const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
-    await createAuditLog(userId, 'finance_approve_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to });
+    await createAuditLog(userId, 'finance_approve_purchase_order', 'purchase_order', po.number, { from_status: previous, to_status: to });
     return res;
   });
 
@@ -829,7 +829,7 @@ export const financeReject = async (
 
   const updated = await withTx(async (client) => {
     const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, { notesAppend: reason }, client);
-    await createAuditLog(userId, 'finance_reject_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to, reason });
+    await createAuditLog(userId, 'finance_reject_purchase_order', 'purchase_order', po.number, { from_status: previous, to_status: to, reason });
     return res;
   });
 
@@ -860,7 +860,7 @@ export const generalManagerApprove = async (
 
   const updated = await withTx(async (client) => {
     const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
-    await createAuditLog(userId, 'gm_approve_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to });
+    await createAuditLog(userId, 'gm_approve_purchase_order', 'purchase_order', po.number, { from_status: previous, to_status: to });
     return res;
   });
 
@@ -889,7 +889,7 @@ export const generalManagerReject = async (
 
   const updated = await withTx(async (client) => {
     const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, { notesAppend: reason }, client);
-    await createAuditLog(userId, 'gm_reject_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to, reason });
+    await createAuditLog(userId, 'gm_reject_purchase_order', 'purchase_order', po.number, { from_status: previous, to_status: to, reason });
     return res;
   });
 
@@ -973,7 +973,7 @@ export const procurementUpdate = async (
       ? await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, nextStatus, undefined, client)
       : res;
 
-    await createAuditLog(userId, 'procurement_update_purchase_order', 'purchase_order', finalRes.id, {
+    await createAuditLog(userId, 'procurement_update_purchase_order', 'purchase_order', po.number, {
       from_status: previous,
       to_status: finalRes.status,
       items_updated: body.items?.length ?? 0,
@@ -1010,7 +1010,7 @@ export const returnToManagerForFinalReview = async (
 
   const updated = await withTx(async (client) => {
     const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
-    await createAuditLog(userId, 'return_to_manager_for_final_review', 'purchase_order', res.id, { from_status: previous, to_status: to });
+    await createAuditLog(userId, 'return_to_manager_for_final_review', 'purchase_order', po.number, { from_status: previous, to_status: to });
     return res;
   });
 
@@ -1040,7 +1040,7 @@ export const managerFinalApprove = async (
 
   const updated = await withTx(async (client) => {
     const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, undefined, client);
-    await createAuditLog(userId, 'manager_final_approve_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to });
+    await createAuditLog(userId, 'manager_final_approve_purchase_order', 'purchase_order', po.number, { from_status: previous, to_status: to });
     return res;
   });
 
@@ -1071,7 +1071,7 @@ export const managerFinalReject = async (
 
   const updated = await withTx(async (client) => {
     const res = await (await import('../repositories/purchaseOrderMutations')).updateStatus(id, to, { notesAppend: reason }, client);
-    await createAuditLog(userId, 'manager_final_reject_purchase_order', 'purchase_order', res.id, { from_status: previous, to_status: to, reason });
+    await createAuditLog(userId, 'manager_final_reject_purchase_order', 'purchase_order', po.number, { from_status: previous, to_status: to, reason });
     return res;
   });
 
