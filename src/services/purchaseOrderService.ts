@@ -1,8 +1,9 @@
-import { PurchaseOrderStatus, User, UserRole } from '../types/models';
-import { CreatePurchaseOrderRequest, PurchaseOrderResponse, UpdatePurchaseOrderRequest, PurchaseOrderItemResponse } from '../types/purchaseOrder';
-import { createAuditLog } from './auditService';
+import { PurchaseOrderStatus, UserRole } from '../types/models';
+import { CreatePurchaseOrderRequest, PurchaseOrderResponse, UpdatePurchaseOrderRequest, PurchaseOrderItemResponse, AttachmentInfo } from '../types/purchaseOrder';
+import { createAuditLog, getAuditLogs } from './auditService';
 import { AppError } from '../middlewares/errorMiddleware';
 import * as poRepo from '../repositories/purchaseOrderRepository';
+import * as userRepo from '../repositories/userRepository';
 import { withTx } from '../repositories/tx';
 import { NotificationOrchestrator } from './notificationOrchestrator';
 import { PurchaseOrderNotifier } from './notif-purchars_order_action';
@@ -10,7 +11,6 @@ import { tl } from '../utils/i18n';
 import { handlerExtractImage } from '../utils/handle-extract-image';
 import { Request } from "express";
 import { CloudImageService } from './cloud-image.service';
-import { string } from 'zod';
 /**
  * Generate a unique purchase order number
  */
@@ -173,6 +173,64 @@ export const getPurchaseOrdersPendingManagerReview = async (
   return purchaseOrders;
 };
 
+const CLOUD_FOLDER_PO = 'purchase-orders';
+
+function extractFromUrl(url: string, folderName: string = CLOUD_FOLDER_PO): { userId?: string; uuid?: string; uploadedAt?: Date } {
+  try {
+    const segments = url.split('/').filter(Boolean);
+    const folderIdx = segments.findIndex(s => s === folderName);
+    const vSeg = segments.find(s => /^v\d+$/.test(s));
+    const uploadedAt = vSeg ? new Date(parseInt(vSeg.slice(1), 10) * 1000) : undefined;
+    if (folderIdx >= 0) {
+      const userId = segments[folderIdx + 1];
+      const uuid = segments[folderIdx + 2];
+      return { userId, uuid, uploadedAt };
+    }
+    return { uploadedAt };
+  } catch {
+    return {};
+  }
+}
+
+async function buildAttachments(po: PurchaseOrderResponse): Promise<AttachmentInfo[]> {
+  const urls = po.attachment_url ?? [];
+  const parsed = urls.map(url => ({ url, ...extractFromUrl(url) }));
+  const uniqueUserIds = Array.from(new Set(parsed.map(p => p.userId).filter(Boolean))) as string[];
+  const users = await Promise.all(uniqueUserIds.map(id => userRepo.findById(id)));
+  const byId = new Map<string, { name?: string }>();
+  uniqueUserIds.forEach((id, i) => byId.set(id, { name: users[i]?.name }));
+  const attachments: AttachmentInfo[] = parsed.map(p => ({
+    url: p.url,
+    user_id: p.userId,
+    user_name: p.userId ? byId.get(p.userId)?.name : undefined,
+    uploaded_at: p.uploadedAt,
+  }));
+  return attachments;
+}
+
+async function filterAttachmentsByRole(attachments: AttachmentInfo[], po: PurchaseOrderResponse, currentUserId: string, role: UserRole): Promise<AttachmentInfo[]> {
+  // Managers, assistants, general manager see all
+  if (role === UserRole.MANAGER || role === UserRole.ASSISTANT_MANAGER || role === UserRole.GENERAL_MANAGER || role === UserRole.FINANCE_MANAGER) {
+    return attachments;
+  }
+  if (role === UserRole.PROCUREMENT_OFFICER) {
+    // Find when the PO was routed to procurement
+    const logs = await getAuditLogs('purchase_order', po.id);
+    const routed = logs
+      .filter(l => l.action === 'route_purchase_order' && l.details?.to_status === 'pending_procurement')
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0];
+    const routedAt = routed ? new Date(routed.created_at) : undefined;
+    return attachments.filter(a => {
+      const isOwn = a.user_id === currentUserId;
+      if (!routedAt) return isOwn || true; // if no route time, default allow
+      if (!a.uploaded_at) return isOwn;    // no timestamp, only allow own
+      return a.uploaded_at <= routedAt || isOwn;
+    });
+  }
+  // Employees and others: default to only their own attachments
+  return attachments.filter(a => a.user_id === currentUserId);
+}
+
 /**
  * Get a purchase order by ID
  */
@@ -190,7 +248,10 @@ export const getPurchaseOrderById = async (
 
   const purchaseOrder = await poRepo.getById(id, userRole === UserRole.EMPLOYEE ? { userId } : undefined);
   if (!purchaseOrder) return null;
-  return purchaseOrder;
+
+  const allAttachments = await buildAttachments(purchaseOrder);
+  const visibleAttachments = await filterAttachmentsByRole(allAttachments, purchaseOrder, userId, userRole);
+  return { ...purchaseOrder, attachments: visibleAttachments };
 };
 
 /**

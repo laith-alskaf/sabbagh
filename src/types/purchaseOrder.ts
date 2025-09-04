@@ -8,7 +8,6 @@ export interface CreatePurchaseOrderRequest {
   notes?: string;
   supplier_id?: string;
   execution_date?: Date;
-  attachment_url?: string;
   total_amount?: number;
   currency?: Currency;
   items: CreatePurchaseOrderItemRequest[];
@@ -34,10 +33,16 @@ export interface UpdatePurchaseOrderRequest {
   notes?: string;
   supplier_id?: string;
   execution_date?: Date;
-  attachment_url?: string;
   total_amount?: number;
   currency?: Currency;
   items?: CreatePurchaseOrderItemRequest[];
+}
+
+export interface AttachmentInfo {
+  url: string;
+  user_id?: string;       // extracted from cloud path `${folderName}/${userId}/${uuid}`
+  user_name?: string;     // resolved from users table
+  uploaded_at?: Date;     // extracted from cloudinary version segment v<unix_ts>
 }
 
 export interface PurchaseOrderResponse {
@@ -61,6 +66,7 @@ export interface PurchaseOrderResponse {
   created_at: Date;
   updated_at: Date;
   items: PurchaseOrderItemResponse[];
+  attachments?: AttachmentInfo[]; // computed on read; filtered by role
 }
 
 export interface PurchaseOrderItemResponse {

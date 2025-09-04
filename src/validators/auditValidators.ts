@@ -6,7 +6,10 @@ export const auditQuerySchema = z.object({
   limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 20),
   action: z.string().optional(),
   entity_type: z.enum(['user', 'vendor', 'item', 'purchase_order', 'change_request']).optional(),
-  entity_id: z.string().uuid().optional(),
+  entity_id: z.string().regex(
+    /^[A-Z0-9_]+$/,
+    { message: "رقم النوع غير صالح" }
+  ).optional(),
   actor_id: z.string().uuid().optional(),
   start_date: z.string().datetime().optional(),
   end_date: z.string().datetime().optional(),
