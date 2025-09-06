@@ -50,7 +50,7 @@ export class NotificationOrchestrator {
 
     let type = 'po_status_changed';
     let title = tl(language, 'notifications.purchaseOrder.statusChanged', { number: po.number });
-    let body = `${previous} → ${next}`;
+    let body = `${tl(language, 'purchaseOrder.status.' + previous)} → ${tl(language, 'purchaseOrder.status.' + next)}`;
 
     switch (next) {
       case PurchaseOrderStatus.UNDER_ASSISTANT_REVIEW:
