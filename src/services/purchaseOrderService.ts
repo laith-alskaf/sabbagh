@@ -15,12 +15,13 @@ import { CloudImageService } from './cloud-image.service';
  * Generate a unique purchase order number
  */
 const generatePurchaseOrderNumber = async (): Promise<string> => {
-  const date = new Date();
-  const year = date.getFullYear().toString().slice(-2);
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const damascusDate = new Date().toLocaleString("en-US", { timeZone: "Asia/Damascus" });
+  const date = new Date(damascusDate);
+  const year = date.getUTCFullYear().toString().slice(-2);
+  const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
 
   // Get the count of purchase orders for this month
-  const count = await poRepo.countForMonth(date.getFullYear(), date.getMonth());
+  const count = await poRepo.countForMonth(date.getUTCFullYear(), date.getUTCMonth());
 
   // Generate the number in format: PO-YY-MM-XXXX
   const sequence = (count + 1).toString().padStart(4, '0');
