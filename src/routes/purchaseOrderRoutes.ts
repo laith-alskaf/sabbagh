@@ -132,6 +132,8 @@ router.get('/my', validateQuery(purchaseOrderQuerySchema), purchaseOrderControll
  *         $ref: '#/components/responses/ServerError'
  */
 router.get('/:id', validateParams(purchaseOrderIdSchema), purchaseOrderController.getPurchaseOrderById);
+// Workflow endpoint (completed orders only) - allowed roles enforced in controller
+router.get('/:id/workflow', validateParams(purchaseOrderIdSchema), purchaseOrderController.getPurchaseOrderWorkflow);
 
 
 

@@ -149,6 +149,34 @@ export const getPurchaseOrderById = asyncHandler(async (req: Request, res: Respo
 });
 
 /**
+ * Get workflow of a completed purchase order
+ * GET /purchase-orders/:id/workflow
+ */
+export const getPurchaseOrderWorkflow = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new AppError(t(req, 'token.required', { ns: 'auth' }), 401);
+  }
+
+  // Roles allowed: AUDITOR, GENERAL_MANAGER, MANAGER, ASSISTANT_MANAGER
+  if (
+    req.user.role !== UserRole.AUDITOR &&
+    req.user.role !== UserRole.GENERAL_MANAGER &&
+    req.user.role !== UserRole.MANAGER &&
+    req.user.role !== UserRole.ASSISTANT_MANAGER
+  ) {
+    throw new AppError(t(req, 'permission.denied', { ns: 'auth' }), 403);
+  }
+
+  const { id } = req.params;
+  const data = await purchaseOrderService.getPurchaseOrderWorkflow(id);
+
+  res.status(200).json({
+    success: true,
+    data,
+  });
+});
+
+/**
  * Create a purchase order
  * POST /purchase-orders
  */

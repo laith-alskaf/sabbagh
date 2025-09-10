@@ -256,6 +256,78 @@ export const getPurchaseOrderById = async (
 };
 
 /**
+ * Get workflow (timeline) for a completed Purchase Order
+ */
+export const getPurchaseOrderWorkflow = async (
+  id: string
+): Promise<Array<{
+  action: string;
+  step: string;
+  status: 'approved' | 'rejected' | 'pending' | 'routed' | 'updated' | 'created' | 'completed';
+  actor: { id: string; name?: string; email?: string };
+  timestamp: Date;
+  details?: Record<string, any> | null;
+}>> => {
+  const po = await poRepo.getById(id);
+  if (!po) throw new Error('Purchase order not found');
+  if (po.status !== PurchaseOrderStatus.COMPLETED) {
+    throw new AppError('Workflow is available only for completed purchase orders', 400);
+  }
+
+  const logs = await getAuditLogs('purchase_order', po.number);
+  // Order ascending (oldest first)
+  const ordered = logs.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  const mapActionToStep = (action: string, details?: any): { step: string; status: 'approved' | 'rejected' | 'pending' | 'routed' | 'updated' | 'created' | 'completed' } => {
+    switch (action) {
+      case 'create_purchase_order':
+        return { step: 'created', status: 'created' };
+      case 'submit_purchase_order':
+        return { step: 'submitted', status: 'pending' };
+      case 'assistant_approve_purchase_order':
+        return { step: 'assistant_review', status: 'approved' };
+      case 'assistant_reject_purchase_order':
+        return { step: 'assistant_review', status: 'rejected' };
+      case 'manager_approve_purchase_order':
+        return { step: 'manager_review', status: 'approved' };
+      case 'manager_reject_purchase_order':
+        return { step: 'manager_review', status: 'rejected' };
+      case 'gm_approve_purchase_order':
+        return { step: 'general_manager_review', status: 'approved' };
+      case 'gm_reject_purchase_order':
+        return { step: 'general_manager_review', status: 'rejected' };
+      case 'finance_approve_purchase_order':
+        return { step: 'finance_review', status: 'approved' };
+      case 'finance_reject_purchase_order':
+        return { step: 'finance_review', status: 'rejected' };
+      case 'route_purchase_order':
+        if (details?.to_status === 'pending_procurement') {
+          return { step: 'routed_to_procurement', status: 'routed' };
+        }
+        return { step: 'routed', status: 'routed' };
+      case 'procurement_update_purchase_order':
+        return { step: 'procurement_update', status: 'updated' };
+      case 'complete_purchase_order':
+        return { step: 'completed', status: 'completed' };
+      default:
+        return { step: action, status: 'updated' };
+    }
+  };
+
+  return ordered.map(l => {
+    const mapped = mapActionToStep(l.action, l.details);
+    return {
+      action: l.action,
+      step: mapped.step,
+      status: mapped.status,
+      actor: { id: l.actor_id, name: l.actor_name, email: l.actor_email },
+      timestamp: l.created_at,
+      details: l.details ?? null,
+    };
+  });
+};
+
+/**
  * Create a purchase order
  */
 export const createPurchaseOrder = async (
@@ -342,7 +414,7 @@ export const createPurchaseOrder = async (
   // Notify assistant & manager about new PO
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onPurchaseOrderCreated(purchaseOrder, 'ar');
+    await orchestrator.onPurchaseOrderCreated(purchaseOrder, language);
   } catch (e) {
     console.error('Notification error on createPurchaseOrder:', e);
   }
