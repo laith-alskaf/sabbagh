@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "995069838965",
+    "project_id": "sabbagh-f986f",
+    "storage_bucket": "sabbagh-f986f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:995069838965:android:21804dd35d2eacead29a3c",
+        "android_client_info": {
+          "package_name": "com.example.sabbagh_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJWbk7DzY4Pr9dMoa2IEbqC9x_AQXfv6U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
