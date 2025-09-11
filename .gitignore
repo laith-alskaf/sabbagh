@@ -17,4 +17,4 @@ db/migrations
 coverage
 logs
 db
-/sabbagh_app
+sabbagh_app/
