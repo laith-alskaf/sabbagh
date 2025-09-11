@@ -1,0 +1,81 @@
+{
+  "general": {
+    "unexpected": "An unexpected error occurred",
+    "tryAgain": "Please try again later",
+    "contact": "If the problem persists, please contact support"
+  },
+  "api": {
+    "notFound": "The requested API endpoint does not exist",
+    "methodNotAllowed": "Method not allowed for this endpoint",
+    "rateLimited": "Too many requests, please try again later"
+  },
+  "database": {
+    "connectionFailed": "Database connection failed",
+    "queryFailed": "Database query failed",
+    "recordNotFound": "Record not found",
+    "duplicateEntry": "A record with this information already exists"
+  },
+  "validation": {
+    "failed": "Validation failed",
+    "invalidData": "Invalid data provided"
+  },
+  "file": {
+    "uploadFailed": "File upload failed",
+    "invalidType": "Invalid file type",
+    "tooLarge": "File is too large",
+    "downloadFailed": "File download failed"
+  },
+  "vendor": {
+    "notFound": "Vendor not found",
+    "createFailed": "Failed to create vendor",
+    "updateFailed": "Failed to update vendor",
+    "deleteFailed": "Failed to delete vendor",
+    "alreadyExists": "A vendor with this information already exists"
+  },
+  "item": {
+    "notFound": "Item not found",
+    "createFailed": "Failed to create item",
+    "updateFailed": "Failed to update item",
+    "deleteFailed": "Failed to delete item",
+    "codeExists": "An item with this code already exists"
+  },
+  "changeRequest": {
+    "notFound": "Change request not found",
+    "alreadyProcessed": "Change request has already been processed",
+    "approveFailed": "Failed to approve change request",
+    "rejectFailed": "Failed to reject change request",
+    "invalidOperation": "Invalid operation for this change request"
+  },
+  "purchaseOrder": {
+    "notFound": "Purchase order not found",
+    "createFailed": "Failed to create purchase order",
+    "updateFailed": "Failed to update purchase order",
+    "submitFailed": "Failed to submit purchase order",
+    "approveFailed": "Failed to approve purchase order",
+    "rejectFailed": "Failed to reject purchase order",
+    "completeFailed": "Failed to mark purchase order as completed",
+    "invalidStatus": "Invalid status for this operation",
+    "notDraft": "Only draft purchase orders can be updated",
+    "notUnderAssistantReview": "Only purchase orders under assistant review can be approved or rejected by assistant manager",
+    "notUnderManagerReview": "Only purchase orders under manager review can be approved or rejected by manager",
+    "notInProgress": "Only in-progress purchase orders can be marked as completed",
+    "alreadySubmitted": "This purchase order has already been submitted",
+    "notYourOrder": "You do not have permission to access this purchase order",
+    "updateOnlyDraftOrInProgress": "Updates are only allowed for DRAFT or IN_PROGRESS status"
+  },
+  "user": {
+    "notFound": "User not found",
+    "emailExists": "Email address already exists",
+    "cannotDeleteSelf": "You cannot delete your own account",
+    "cannotDeleteManager": "Cannot delete manager accounts",
+    "insufficientPermissions": "You do not have permission to perform this action",
+    "cannotAssignRole": "You do not have permission to assign this role",
+    "createFailed": "Failed to create user",
+    "updateFailed": "Failed to update user",
+    "deleteFailed": "Failed to delete user"
+  },
+  "notification": {
+    "unauthorized": "Unauthorized",
+    "tokenRequired": "token is required"
+  }
+}

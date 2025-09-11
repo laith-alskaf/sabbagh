@@ -1,0 +1,81 @@
+{
+  "general": {
+    "unexpected": "حدث خطأ غير متوقع",
+    "tryAgain": "يرجى المحاولة مرة أخرى لاحقًا",
+    "contact": "إذا استمرت المشكلة، يرجى الاتصال بالدعم"
+  },
+  "api": {
+    "notFound": "نقطة النهاية المطلوبة لواجهة برمجة التطبيقات غير موجودة",
+    "methodNotAllowed": "الطريقة غير مسموح بها لنقطة النهاية هذه",
+    "rateLimited": "طلبات كثيرة جدًا، يرجى المحاولة مرة أخرى لاحقًا"
+  },
+  "database": {
+    "connectionFailed": "فشل الاتصال بقاعدة البيانات",
+    "queryFailed": "فشل استعلام قاعدة البيانات",
+    "recordNotFound": "السجل غير موجود",
+    "duplicateEntry": "يوجد بالفعل سجل بهذه المعلومات"
+  },
+  "validation": {
+    "failed": "فشل التحقق من الصحة",
+    "invalidData": "تم تقديم بيانات غير صالحة"
+  },
+  "file": {
+    "uploadFailed": "فشل تحميل الملف",
+    "invalidType": "نوع ملف غير صالح",
+    "tooLarge": "الملف كبير جدًا",
+    "downloadFailed": "فشل تنزيل الملف"
+  },
+  "vendor": {
+    "notFound": "المورد غير موجود",
+    "createFailed": "فشل إنشاء المورد",
+    "updateFailed": "فشل تحديث المورد",
+    "deleteFailed": "فشل حذف المورد",
+    "alreadyExists": "يوجد بالفعل مورد بهذه المعلومات"
+  },
+  "item": {
+    "notFound": "العنصر غير موجود",
+    "createFailed": "فشل إنشاء العنصر",
+    "updateFailed": "فشل تحديث العنصر",
+    "deleteFailed": "فشل حذف العنصر",
+    "codeExists": "يوجد بالفعل عنصر بهذا الرمز"
+  },
+  "changeRequest": {
+    "notFound": "طلب التغيير غير موجود",
+    "alreadyProcessed": "تمت معالجة طلب التغيير بالفعل",
+    "approveFailed": "فشل الموافقة على طلب التغيير",
+    "rejectFailed": "فشل رفض طلب التغيير",
+    "invalidOperation": "عملية غير صالحة لطلب التغيير هذا"
+  },
+  "purchaseOrder": {
+    "notFound": "طلب الشراء غير موجود",
+    "createFailed": "فشل إنشاء طلب الشراء",
+    "updateFailed": "فشل تحديث طلب الشراء",
+    "submitFailed": "فشل تقديم طلب الشراء",
+    "approveFailed": "فشل الموافقة على طلب الشراء",
+    "rejectFailed": "فشل رفض طلب الشراء",
+    "completeFailed": "فشل تحديد طلب الشراء كمكتمل",
+    "invalidStatus": "حالة غير صالحة لهذه العملية",
+    "notDraft": "يمكن تحديث طلبات الشراء في حالة المسودة فقط",
+    "notUnderAssistantReview": "يمكن الموافقة على طلبات الشراء أو رفضها من قبل مساعد المدير فقط إذا كانت قيد مراجعة مساعد المدير",
+    "notUnderManagerReview": "يمكن الموافقة على طلبات الشراء أو رفضها من قبل المدير فقط إذا كانت قيد مراجعة المدير",
+    "notInProgress": "يمكن تحديد طلبات الشراء كمكتملة فقط إذا كانت قيد التنفيذ",
+    "alreadySubmitted": "تم تقديم طلب الشراء هذا بالفعل",
+    "notYourOrder": "ليس لديك إذن للوصول إلى طلب الشراء هذا",
+    "updateOnlyDraftOrInProgress": "يُسمح بالتحديث فقط إذا كانت الحالة DRAFT أو IN_PROGRESS"
+  },
+  "user": {
+    "notFound": "المستخدم غير موجود",
+    "emailExists": "عنوان البريد الإلكتروني موجود بالفعل",
+    "cannotDeleteSelf": "لا يمكنك حذف حسابك الخاص",
+    "cannotDeleteManager": "لا يمكن حذف حسابات المديرين",
+    "insufficientPermissions": "ليس لديك إذن لتنفيذ هذا الإجراء",
+    "cannotAssignRole": "ليس لديك إذن لتعيين هذا الدور",
+    "createFailed": "فشل إنشاء المستخدم",
+    "updateFailed": "فشل تحديث المستخدم",
+    "deleteFailed": "فشل حذف المستخدم"
+  },
+  "notification": {
+    "unauthorized": "وصول غير مصرح به",
+    "tokenRequired": "رمز الإشعار مطلوب"
+  }
+}

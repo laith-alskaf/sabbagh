@@ -1,0 +1,88 @@
+{
+  "welcome": "Welcome to Sabbagh API",
+  "serverError": "Internal server error occurred",
+  "notFound": "Resource not found",
+  "unauthorized": "Unauthorized access",
+  "forbidden": "Access forbidden",
+  "validation": {
+    "required": "{{field}} is required",
+    "minLength": "{{field}} must be at least {{min}} characters",
+    "maxLength": "{{field}} must be at most {{max}} characters",
+    "email": "Please provide a valid email address",
+    "passwordMatch": "Passwords do not match",
+    "invalidFormat": "Invalid format for {{field}}",
+    "requiredFields": "Please fill in all required fields"
+  },
+  "vendor": {
+    "created": "Vendor created successfully",
+    "updated": "Vendor updated successfully",
+    "deleted": "Vendor deleted successfully"
+  },
+  "item": {
+    "created": "Item created successfully",
+    "updated": "Item updated successfully",
+    "deleted": "Item deleted successfully"
+  },
+  "changeRequest": {
+    "created": "Change request created successfully. Waiting for manager approval.",
+    "approved": "Change request approved successfully",
+    "rejected": "Change request rejected",
+    "pending": "Pending",
+    "approved_status": "Approved",
+    "rejected_status": "Rejected"
+  },
+  "purchaseOrder": {
+    "created": "Purchase order created successfully",
+    "updated": "Purchase order updated successfully",
+    "submitted": "Purchase order submitted for review",
+    "assistantApproved": "Purchase order approved by assistant manager and sent for manager review",
+    "assistantRejected": "Purchase order rejected by assistant manager",
+    "managerApproved": "Purchase order approved by manager and marked as in progress",
+    "managerRejected": "Purchase order rejected by manager",
+    "completed": "Purchase order marked as completed",
+    "status": {
+      "draft": "Draft",
+      "under_assistant_review": "Under Assistant Manager Review",
+      "rejected_by_assistant": "Rejected by Assistant Manager",
+      "under_manager_review": "Under Manager Review",
+      "rejected_by_manager": "Rejected by Manager",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "under_finance_review": "Under Finance Review",
+      "rejected_by_finance": "Rejected by Finance",
+      "under_general_manager_review": "Under General Manager Review",
+      "rejected_by_general_manager": "Rejected by General Manager",
+      "pending_procurement": "Pending Procurement",
+      "returned_to_manager_review": "Returned to Manager Review"
+    }
+  },
+  "roles": {
+    "manager": "Purchasing Manager",
+    "assistant_manager": "Assistant Purchasing Manager",
+    "employee": "Purchasing Employee",
+    "guest": "Guest",
+    "general_manager": "General Manager",
+    "finance_manager": "Finance Manager",
+    "procurement_officer": "Procurement Officer"
+  },
+  "notifications": {
+    "purchaseOrder": {
+      "newOrder": "New Purchase Order {{number}}",
+      "newOrderBody": "{{requester}} ({{department}})",
+      "statusChanged": "Purchase Order {{number}} Status Changed",
+      "sentToAssistant": "Purchase Order {{number}} sent to Assistant for review",
+      "sentToManager": "Purchase Order {{number}} sent to Manager for review",
+      "approved": "Purchase Order {{number}} approved",
+      "approvedBody": "Ready for execution",
+      "rejectedByAssistant": "Purchase Order {{number}} rejected by Assistant",
+      "rejectedByManager": "Purchase Order {{number}} rejected by Manager",
+      "completed": "Purchase Order {{number}} execution completed",
+      "sentToFinance": "Purchase Order {{number}} sent to Finance",
+      "sentToGeneralManager": "Purchase Order {{number}} sent to General Manager",
+      "sentToProcurement": "Purchase Order {{number}} sent to Procurement",
+      "returnedToManager": "Purchase Order {{number}} returned to Manager for final review",
+      "rejectedByFinance": "Purchase Order {{number}} rejected by Finance",
+      "rejectedByGeneralManager": "Purchase Order {{number}} rejected by General Manager"
+    }
+  }
+}
