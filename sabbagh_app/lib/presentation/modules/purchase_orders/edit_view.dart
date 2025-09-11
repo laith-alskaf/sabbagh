@@ -79,7 +79,7 @@ class EditPurchaseOrderView extends GetView<PurchaseOrderController> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _initializeFormWithOrder(order);
         });
-
+    double scale = MediaQuery.of(Get.context!).size.width > 600 ? 1.5 : 1.0;
         return Form(
           key: controller.formKey,
           child: SingleChildScrollView(
@@ -99,7 +99,7 @@ class EditPurchaseOrderView extends GetView<PurchaseOrderController> {
                 const SizedBox(height: 16),
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(scale*16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -118,7 +118,7 @@ class EditPurchaseOrderView extends GetView<PurchaseOrderController> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height:scale* 12),
                         Obx(() {
                           final images = controller.pickedImages;
                           if (images.isEmpty) {
@@ -133,9 +133,9 @@ class EditPurchaseOrderView extends GetView<PurchaseOrderController> {
                             physics: const NeverScrollableScrollPhysics(),
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
-                                  crossAxisSpacing: 8,
-                                  mainAxisSpacing: 8,
+                                  crossAxisCount:scale* 3,
+                                  crossAxisSpacing:scale* 8,
+                                  mainAxisSpacing: scale*8,
                                 ),
                             itemCount: images.length,
                             itemBuilder: (context, index) {
@@ -148,14 +148,14 @@ class EditPurchaseOrderView extends GetView<PurchaseOrderController> {
                                     child: Image.file(file, fit: BoxFit.cover),
                                   ),
                                   Positioned(
-                                    top: 4,
-                                    right: 4,
+                                    top:scale* 4,
+                                    right:scale* 4,
                                     child: CircleAvatar(
                                       backgroundColor: Colors.black54,
                                       radius: 14,
                                       child: IconButton(
                                         padding: EdgeInsets.zero,
-                                        iconSize: 16,
+                                        iconSize:scale* 16,
                                         icon: const Icon(
                                           Icons.close,
                                           color: Colors.white,
@@ -172,7 +172,7 @@ class EditPurchaseOrderView extends GetView<PurchaseOrderController> {
                             },
                           );
                         }),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: scale*8),
                         Text(
                           'attachments_hint_max_count'.trParams({'count': '5'}),
                           style: Theme.of(context).textTheme.bodySmall
@@ -182,7 +182,7 @@ class EditPurchaseOrderView extends GetView<PurchaseOrderController> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height:scale* 24),
                 _buildUpdateButton(order),
               ],
             ),
@@ -372,28 +372,28 @@ class EditPurchaseOrderView extends GetView<PurchaseOrderController> {
             const SizedBox(height: 16),
 
             // Request date
-            Obx(
-              () => TextFormField(
-                controller: controller.requestDate.value,
-                decoration: InputDecoration(
-                  labelText: 'request_date'.tr,
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.date_range),
-                    onPressed: () => _selectRequestDate(),
-                  ),
-                ),
-                readOnly: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'request_date_required'.tr;
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
+            // Obx(
+            //   () => TextFormField(
+            //     controller: controller.requestDate.value,
+            //     decoration: InputDecoration(
+            //       labelText: 'request_date'.tr,
+            //       border: const OutlineInputBorder(),
+            //       prefixIcon: const Icon(Icons.calendar_today),
+            //       suffixIcon: IconButton(
+            //         icon: const Icon(Icons.date_range),
+            //         onPressed: () => _selectRequestDate(),
+            //       ),
+            //     ),
+            //     readOnly: true,
+            //     validator: (value) {
+            //       if (value == null || value.isEmpty) {
+            //         return 'request_date_required'.tr;
+            //       }
+            //       return null;
+            //     },
+            //   ),
+            // ),
+            // const SizedBox(height: 16),
 
             // Execution date (optional)
             Obx(
@@ -893,24 +893,24 @@ class EditPurchaseOrderView extends GetView<PurchaseOrderController> {
             .toList();
   }
 
-  void _selectRequestDate() async {
-    final currentDate =
-        controller.formData['request_date'] != null
-            ? DateTime.tryParse(controller.formData['request_date'])
-            : DateTime.now();
+  // void _selectRequestDate() async {
+  //   final currentDate =
+  //       controller.formData['request_date'] != null
+  //           ? DateTime.tryParse(controller.formData['request_date'])
+  //           : DateTime.now();
 
-    final date = await showDatePicker(
-      context: Get.context!,
-      initialDate: currentDate ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
+  //   final date = await showDatePicker(
+  //     context: Get.context!,
+  //     initialDate: currentDate ?? DateTime.now(),
+  //     firstDate: DateTime.now().subtract(const Duration(days: 30)),
+  //     lastDate: DateTime.now().add(const Duration(days: 365)),
+  //   );
 
-    if (date != null) {
-      controller.formData['request_date'] = _formatDateForInput(date);
-      controller.requestDate.value.text = controller.formData['request_date'];
-    }
-  }
+  //   if (date != null) {
+  //     controller.formData['request_date'] = _formatDateForInput(date);
+  //     controller.requestDate.value.text = controller.formData['request_date'];
+  //   }
+  // }
 
   void _selectExecutionDate() async {
     final currentDate =
