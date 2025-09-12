@@ -18,3 +18,11 @@ coverage
 logs
 db
 sabbagh_app/
+documentation/
+.vscode
+.idea
+tests
+.prettierrc
+.metadata
+.eslintrc
+sabbagh.iml
