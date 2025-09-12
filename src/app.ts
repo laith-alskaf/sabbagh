@@ -15,6 +15,7 @@ import { specs } from './config/swagger';
 const app = express();
 
 // Apply middlewares
+
 app.use(helmet()); // Security headers
 // Enable CORS with proper configuration
 app.use(cors());
