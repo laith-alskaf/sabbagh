@@ -26,3 +26,5 @@ tests
 .metadata
 .eslintrc
 sabbagh.iml
+.idea
+.vscode
