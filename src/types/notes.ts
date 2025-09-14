@@ -1,4 +1,3 @@
-import { UserRole } from './models';
 
 export interface CreatePurchaseOrderNoteRequest {
   note: string;

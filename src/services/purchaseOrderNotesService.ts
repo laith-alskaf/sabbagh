@@ -21,6 +21,7 @@ function canReadNotes(role: UserRole, poStatus: PurchaseOrderStatus): boolean {
 
 function canAddNote(role: UserRole, poStatus: PurchaseOrderStatus): boolean {
   if (role === UserRole.AUDITOR) return poStatus === PurchaseOrderStatus.COMPLETED;
+  if (role === UserRole.PROCUREMENT_OFFICER) return poStatus === PurchaseOrderStatus.PENDING_PROCUREMENT;
   if (role === UserRole.GENERAL_MANAGER || role === UserRole.FINANCE_MANAGER) return isPoUnderRole(poStatus, role);
   return false;
 }
