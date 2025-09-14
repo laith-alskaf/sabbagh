@@ -983,7 +983,7 @@ export const procurementUpdate = async (
   req: Request,
   id: string,
   userId: string,
-  body: { items: Array<{ id?: string; received_quantity?: number | null; price?: number | null; line_total?: number | null; }> },
+  body: { items: Array<{ id?: string; received_quantity?: number | null; price?: number | null; line_total?: number | null; supplier_name?: string | null; }> },
   language: string = 'ar'
 ): Promise<PurchaseOrderResponse> => {
   const po = await poRepo.getById(id);
@@ -1009,9 +1009,9 @@ export const procurementUpdate = async (
 
 
   // Merge item updates onto existing items
-  const updatesById = new Map<string, { received_quantity?: number | null; price?: number | null; line_total?: number | null; }>();
+  const updatesById = new Map<string, { received_quantity?: number | null; price?: number | null; line_total?: number | null; supplier_name?: string | null; }>();
   for (const it of body.items || []) {
-    if (it.id) updatesById.set(it.id, { received_quantity: it.received_quantity, price: it.price, line_total: it.line_total });
+    if (it.id) updatesById.set(it.id, { received_quantity: it.received_quantity, price: it.price, line_total: it.line_total, supplier_name: it.supplier_name });
   }
 
   const mergedItems = (po.items || []).map((item) => {
@@ -1022,6 +1022,7 @@ export const procurementUpdate = async (
       item_code: item.item_code ?? null,
       item_name: item.item_name ?? null,
       quantity: item.quantity,
+      supplier_name: upd?.supplier_name ?? po.supplier_name ?? null,
       unit: item.unit,
       received_quantity: upd?.received_quantity ?? item.received_quantity ?? null,
       price: upd?.price ?? item.price ?? null,
