@@ -2,7 +2,7 @@ import { ItemStatus } from '../types/models';
 
 export interface CreateItemRequest {
   name: string;
-  description?: string;
+  description: string| null;
   unit: string;
   code: string;
   status: ItemStatus;
