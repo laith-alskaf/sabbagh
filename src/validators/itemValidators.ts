@@ -13,7 +13,7 @@ export const createItemSchema = z.object({
     .trim(),
   description: z.string()
     .max(500, 'Description must not exceed 500 characters')
-    .trim()
+    .trim().nullable()
     .optional(),
   unit: z.string()
     .min(1, 'Unit is required')
