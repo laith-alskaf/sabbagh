@@ -362,7 +362,22 @@ export const createPurchaseOrder = async (
     uploadToCloudinary: uploudImageService
   });
 
+  const itemsWithTotals = data.items.map((item) => {
+    const price = item.price ?? 0;
+    const quantity = item.quantity ?? 0;
+    // في بعض الحالات قد تكون line_total مُقدّماً، إذا كان موجوداً استخدمه؛ وإلا احسبه
+    const lineTotalFromItem = item.line_total != null ? item.line_total : price * quantity;
+    item.line_total = lineTotalFromItem;
+    return {
+      ...item,
+      price: price,
+      quantity: quantity,
+      line_total: lineTotalFromItem,
+    };
+  });
 
+  // ثم اجمع جميع line_totals للحصول على total_amount النهائي
+  const totalAmountCalculated = itemsWithTotals.reduce((acc, cur) => acc + (Number(cur.line_total) || 0), 0);
   // Create the purchase order with items in a transaction
   const purchaseOrder = await withTx(async (client) => {
     const inserted = await poRepo.insert(
@@ -377,7 +392,7 @@ export const createPurchaseOrder = async (
         supplier_id: data.supplier_id ?? null,
         execution_date: data.execution_date ?? null,
         attachment_url: urlsImages ?? null,
-        total_amount: data.total_amount ?? null,
+        total_amount: data.total_amount ?? totalAmountCalculated,
         currency: data.currency ?? null,
         created_by: userId,
       } as any,
@@ -472,21 +487,40 @@ export const updatePurchaseOrder = async (
     }
   }
 
+  let computedTotalAmount: number | null = null;
+  if (data.items != null && data.items.length > 0) {
+    const itemsWithTotals = data.items.map((item) => {
+      const price = item.price ?? 0;
+      const quantity = item.quantity ?? 0;
+      // في بعض الحالات قد تكون line_total مُقدّماً، إذا كان موجوداً استخدمه؛ وإلا احسبه
+      const lineTotalFromItem = item.line_total != null ? item.line_total : price * quantity;
+      item.line_total = lineTotalFromItem;
+      return {
+        ...item,
+        price: price,
+        quantity: quantity,
+        line_total: lineTotalFromItem,
+      };
+    });
+    computedTotalAmount = itemsWithTotals.reduce((acc, cur) => acc + (cur.line_total || 0), 0);
+
+  }
+
   // Update the purchase order with items in a transaction
   const updatedPurchaseOrder = await withTx(async (client) => {
     const updated = await (await import('../repositories/purchaseOrderMutations')).updateDraft(
       id,
       {
-        request_date: data.request_date,
-        department: data.department,
-        request_type: data.request_type,
-        requester_name: data.requester_name,
-        notes: data.notes,
-        supplier_id: data.supplier_id,
+        request_date: data.request_date ?? purchaseOrder.request_date,
+        department: data.department ?? purchaseOrder.department,
+        request_type: data.request_type ?? purchaseOrder.request_type,
+        requester_name: data.requester_name ?? purchaseOrder.requester_name,
+        notes: data.notes ?? purchaseOrder.notes,
+        supplier_id: data.supplier_id ?? purchaseOrder.supplier_id,
         execution_date: data.execution_date,
         attachment_url: urlsImages ?? purchaseOrder.attachment_url,
-        total_amount: data.total_amount,
-        currency: data.currency,
+        total_amount: computedTotalAmount ?? data.total_amount ?? purchaseOrder.total_amount,
+        currency: data.currency ?? purchaseOrder.currency,
       },
       data.items,
       client
@@ -564,7 +598,7 @@ export const submitPurchaseOrder = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, nextStatus, 'ar');
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, nextStatus, language);
   } catch (e) {
     console.error('Notification error on submitPurchaseOrder:', e);
   }
@@ -610,7 +644,7 @@ export const assistantApprove = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.UNDER_MANAGER_REVIEW, 'ar');
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.UNDER_MANAGER_REVIEW, language);
   } catch (e) {
     console.error('Notification error on assistantApprove:', e);
   }
@@ -656,7 +690,7 @@ export const assistantReject = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.REJECTED_BY_ASSISTANT, 'ar');
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.REJECTED_BY_ASSISTANT, language);
   } catch (e) {
     console.error('Notification error on assistantReject:', e);
   }
@@ -701,7 +735,7 @@ export const managerApprove = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.IN_PROGRESS, 'ar');
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.IN_PROGRESS, language);
   } catch (e) {
     console.error('Notification error on managerApprove:', e);
   }
@@ -747,7 +781,7 @@ export const managerReject = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.REJECTED_BY_MANAGER, 'ar');
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.REJECTED_BY_MANAGER, language);
   } catch (e) {
     console.error('Notification error on managerReject:', e);
   }
@@ -793,7 +827,7 @@ export const completePurchaseOrder = async (
   // Notify creator about status change
   try {
     const orchestrator = new NotificationOrchestrator(new PurchaseOrderNotifier());
-    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.COMPLETED, 'ar');
+    await orchestrator.onStatusChanged(updatedPurchaseOrder, purchaseOrder.status, PurchaseOrderStatus.COMPLETED, language);
   } catch (e) {
     console.error('Notification error on completePurchaseOrder:', e);
   }
@@ -1007,7 +1041,24 @@ export const procurementUpdate = async (
     }
   }
 
+  let computedTotalAmount: number | null = null;
+  if (body.items != null && body.items.length > 0) {
+    const itemsWithTotals = body.items.map((item) => {
+      const price = item.price ?? 0;
+      const receivedQuantity = item.received_quantity ?? 0;
+      // في بعض الحالات قد تكون line_total مُقدّماً، إذا كان موجوداً استخدمه؛ وإلا احسبه
+      const lineTotalFromItem = item.line_total != null ? item.line_total : price * receivedQuantity;
+      item.line_total = lineTotalFromItem;
+      return {
+        ...item,
+        price: price,
+        received_quantity: receivedQuantity,
+        line_total: lineTotalFromItem,
+      };
+    });
+    computedTotalAmount = itemsWithTotals.reduce((acc, cur) => acc + (cur.line_total || 0), 0);
 
+  }
   // Merge item updates onto existing items
   const updatesById = new Map<string, { received_quantity?: number | null; price?: number | null; line_total?: number | null; supplier_name?: string | null; }>();
   for (const it of body.items || []) {
@@ -1038,7 +1089,10 @@ export const procurementUpdate = async (
     // Update attachment and items using existing draft updater (works for core fields)
     const res = await (await import('../repositories/purchaseOrderMutations')).updateDraft(
       id,
-      { attachment_url: urlsImages ?? po.attachment_url } as any,
+      {
+        attachment_url: urlsImages ?? po.attachment_url,
+        total_amount: computedTotalAmount ?? po.total_amount
+      } as any,
       mergedItems,
       client
     );
