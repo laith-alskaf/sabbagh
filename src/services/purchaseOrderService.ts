@@ -1026,7 +1026,7 @@ export const procurementUpdate = async (
       received_quantity: upd?.received_quantity ?? item.received_quantity ?? null,
       price: upd?.price ?? item.price ?? null,
       line_total: upd?.line_total ?? item.line_total ?? null,
-      currency: item.currency ?? null,
+      currency: po.currency,
     } as any;
   });
 
