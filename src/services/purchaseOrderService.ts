@@ -392,8 +392,8 @@ export const createPurchaseOrder = async (
         supplier_id: data.supplier_id ?? null,
         execution_date: data.execution_date ?? null,
         attachment_url: urlsImages ?? null,
-        total_amount: data.total_amount ?? totalAmountCalculated,
-        currency: data.currency ?? null,
+        total_amount: totalAmountCalculated ?? data.total_amount,
+        currency: data.currency ?? 'USD',
         created_by: userId,
       } as any,
       data.items.map((item) => ({
@@ -520,7 +520,7 @@ export const updatePurchaseOrder = async (
         execution_date: data.execution_date,
         attachment_url: urlsImages ?? purchaseOrder.attachment_url,
         total_amount: computedTotalAmount ?? data.total_amount ?? purchaseOrder.total_amount,
-        currency: data.currency ?? purchaseOrder.currency,
+        currency: data.currency ?? purchaseOrder.currency ?? 'USD',
       },
       data.items,
       client
