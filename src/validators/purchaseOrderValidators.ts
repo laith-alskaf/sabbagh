@@ -73,7 +73,7 @@ const procurementItemUpdateSchema = z.object({
   id: z.string().optional(), // item id in the order items table
   received_quantity: z.number().nullable().optional(),
   price: z.number().nonnegative().nullable().optional(),
-  supplier_id: z.string().nullable().optional(),
+  supplier_name: z.string().nullable().optional(),
   line_total: z.number().nonnegative().nullable().optional(),
 });
 
